@@ -73,4 +73,14 @@ dependencies {
     // WebView Accompanist library
     implementation(libs.accompanist.webview)
 
+    // Conexão IA
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // Animação Sonora
+    implementation(libs.ui)
+    implementation(libs.androidx.animation)
+    implementation(libs.material3)
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.foundation)
 }

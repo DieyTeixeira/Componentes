@@ -32,6 +32,10 @@ import com.dieyteixeira.componentes.ui.components.animated_border_card.AnimatedB
 import com.dieyteixeira.componentes.ui.components.animated_select_item.AnimatedSelectItem
 import com.dieyteixeira.componentes.ui.components.animated_stop_watch.AnimatedStopWatch
 import com.dieyteixeira.componentes.ui.components.animated_top_bar.AnimatedTopBar
+import com.dieyteixeira.componentes.ui.components.game_pacman.GamePacMan
+import com.dieyteixeira.componentes.ui.components.game_snake.GameSnake
+import com.dieyteixeira.componentes.ui.components.game_tetris.GameTetris
+import com.dieyteixeira.componentes.ui.components.game_velha.GameVelha
 import com.dieyteixeira.componentes.ui.components.horizontal_pager.HorizontalPager
 import com.dieyteixeira.componentes.ui.components.lazy_list_scroll_state.LazyListScrollState
 import com.dieyteixeira.componentes.ui.components.loading_animation.ChasingDots
@@ -132,7 +136,6 @@ fun getRandomColor(): Color {
     return colors.random()
 }
 
-
     @OptIn(ExperimentalAnimationApi::class)
     val screens = listOf<@Composable () -> Unit>(
         { ChasingDots(color = getRandomColor()) },
@@ -159,7 +162,11 @@ fun getRandomColor(): Color {
         { HorizontalPager() },
         { LazyListScrollState() },
         { PhotoPicker() },
-        { WebBrowser(color = getRandomColor()) }
+        { WebBrowser(color = getRandomColor()) },
+        { GameSnake() },
+        { GameVelha() },
+        { GameTetris() },
+        { GamePacMan() }
     )
 
     val texts = listOf(
@@ -184,5 +191,9 @@ fun getRandomColor(): Color {
         "Horizontal Pager",
         "Lazy List Scroll State",
         "Photo Picker",
-        "Web Browser"
+        "Web Browser",
+        "Game Snake",
+        "Game Velha",
+        "Game Tetris",
+        "Game PacMan"
     )
