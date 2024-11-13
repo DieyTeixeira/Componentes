@@ -10,8 +10,10 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
+val Food = Color(0xFFFEF09D)
+val GhostVulnerable = Color(0xFFC5D2E8)
+
 val LightGreen = Color(0xFF8DA25A)
-val backGreen = Color(0xFF96BF03)
 val DarkGreen = Color(0xFF2D321D)
 
 val DarkGreen1 = Color(0xFF2D321D)

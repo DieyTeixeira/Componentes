@@ -1,18 +1,20 @@
-package com.dieyteixeira.componentes.ui.screen
+package com.dieyteixeira.componentes.ui.elements.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesomeMosaic
-import androidx.compose.material.icons.filled.Games
-import androidx.compose.material.icons.filled.HdrStrong
-import androidx.compose.material.icons.outlined.AutoAwesomeMosaic
-import androidx.compose.material.icons.outlined.Games
-import androidx.compose.material.icons.outlined.HdrWeak
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,22 +22,33 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
+
+/*-------------------------------------------------------------------------------------------------|
+|                                                                                                  |
+|                                 PÁGINAS EM ABAS HORIZONTAIS                                      |
+|                                                                                                  |
+|------------------------------------------------------------------------------------------------ */
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun AppScreen() {
+fun HorizontalPager() {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { HomeTabs.entries.size })
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
 
-    Scaffold {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(text = "Home") }) }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -67,13 +80,18 @@ fun AppScreen() {
                 }
             }
 
-            androidx.compose.foundation.pager.HorizontalPager(
+            HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                HomeTabs.entries[selectedTabIndex.value].screen()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = HomeTabs.entries[selectedTabIndex.value].text)
+                }
             }
         }
     }
@@ -82,26 +100,27 @@ fun AppScreen() {
 enum class HomeTabs(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-    val text: String,
-    val screen: @Composable () -> Unit
+    val text: String
 ) {
-    Loadings(
-        unselectedIcon = Icons.Outlined.HdrWeak,
-        selectedIcon = Icons.Filled.HdrStrong,
-        text = "Loadings",
-        screen = { LoadingsScreen() }
+    Shop(
+        unselectedIcon = Icons.Outlined.ShoppingCart,
+        selectedIcon = Icons.Filled.ShoppingCart,
+        text = "Shop"
     ),
-    Components(
-        unselectedIcon = Icons.Outlined.AutoAwesomeMosaic,
-        selectedIcon = Icons.Filled.AutoAwesomeMosaic,
-        text = "Components",
-        screen = { ComponentsScreen() }
+    Favourite(
+        unselectedIcon = Icons.Outlined.FavoriteBorder,
+        selectedIcon = Icons.Filled.Favorite,
+        text = "Favourite"
     ),
-    Games(
-        unselectedIcon = Icons.Outlined.Games,
-        selectedIcon = Icons.Filled.Games,
-        text = "Games",
-        screen = { GamesScreen() }
+    Profile(
+        unselectedIcon = Icons.Outlined.Person,
+        selectedIcon = Icons.Filled.Person,
+        text = "Profile"
     )
 }
 
+@Preview
+@Composable
+private fun HorizontalPagerPreview() {
+    HorizontalPager()
+}
