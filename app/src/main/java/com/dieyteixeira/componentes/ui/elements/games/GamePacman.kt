@@ -145,7 +145,7 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
                         ghosts = newGhostPositions,
                         score = if (ateFood) currentState.score + 5 else if (ateBestFood) currentState.score + 10 else currentState.score,
                         isGameOver = isCollision || (remainingFood.isEmpty() && remainingBestFood.isEmpty()),
-                        ghostVulnerabilities  = newGhostVulnerabilities,
+                        ghostVulnerabilities = newGhostVulnerabilities,
                         currentDirection = if (newPacmanPosition != currentState.pacman) move else currentState.currentDirection // Atualizar a direção atual somente se o movimento foi bem-sucedido
                     )
 
@@ -220,6 +220,9 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
     ): List<Pair<Int, Int>> {
         return ghosts.mapIndexed { index, ghost ->
             if (ghostVulnerabilities[index]) { // Verifica se o fantasma está vulnerável
+                scope.launch {
+                    delay(400L) // Delay adicional para fantasmas vulneráveis (200ms + 200ms)
+                }
                 moveToHome(ghost, home[index], walls, pacmanPosition, ghostVulnerabilities[index], index)
             } else {
                 when (index) {
@@ -310,6 +313,14 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
         val deltaX = pacmanPosition.first - blinkyPosition.first
         val deltaY = pacmanPosition.second - blinkyPosition.second
         val targetPosition = Pair(pacmanPosition.first + deltaX, pacmanPosition.second + deltaY)
+
+        // Verifica se o alvo é válido (não é uma parede)
+        if (walls.contains(targetPosition)) {
+            // Se o alvo não for válido, Inky persegue diretamente Pac-Man
+            return moveTowardsTargetBFS(ghost, pacmanPosition, walls)
+        }
+
+        // Se o alvo for válido, Inky vai em direção a ele
         return moveTowardsTargetBFS(ghost, targetPosition, walls)
     }
 
@@ -357,18 +368,42 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
             return ghost // Se não houver movimentos válidos, o fantasma fica parado
         }
 
+        // Função para verificar se Pac-Man está bloqueando o caminho direto
+        fun isPacmanBlockingDirectPath(ghost: Pair<Int, Int>, target: Pair<Int, Int>, pacman: Pair<Int, Int>): Boolean {
+            val distanceToTarget = calculateManhattanDistance(ghost, target)
+            val distanceToPacman = calculateManhattanDistance(ghost, pacman)
+            val pacmanToTargetDistance = calculateManhattanDistance(pacman, target)
+
+            // Pac-Man está bloqueando se a soma das distâncias do fantasma até Pac-Man e de Pac-Man até a home for igual à distância direta do fantasma até a home
+            return distanceToPacman + pacmanToTargetDistance <= distanceToTarget + 1
+        }
+
+        // Filtrar os movimentos possíveis para evitar Pac-Man se ele estiver bloqueando o caminho
+        val nonBlockingMoves = possibleMoves.filterNot { move ->
+            isPacmanBlockingDirectPath(move, home, pacmanPosition)
+        }
+
+        // Se não houver movimentos não bloqueados, o fantasma deve tentar se afastar de Pac-Man
         return if (isVulnerable && distanceToPacman < avoidanceRadius) {
-            // Se o Pac-Man estiver muito perto, prioriza se afastar dele
-            possibleMoves.maxByOrNull { move ->
+            // Se Pac-Man estiver muito perto, prioriza se afastar dele e tenta voltar para casa
+            val bestMove = nonBlockingMoves.maxByOrNull { move ->
                 val distanceFromPacman = calculateManhattanDistance(move, pacmanPosition)
                 val distanceFromHome = calculateManhattanDistance(move, home)
+                distanceFromPacman - distanceFromHome // Afasta de Pac-Man, mas tenta ir para casa
+            }
 
-                // Queremos um movimento que aumente a distância de Pac-Man e também tente ir para casa
-                distanceFromPacman - distanceFromHome / 2 // Fator de equilíbrio
+            // Se não houver movimentos não bloqueados, tenta o melhor movimento disponível
+            bestMove ?: possibleMoves.maxByOrNull { move ->
+                calculateManhattanDistance(move, pacmanPosition)
             } ?: ghost
         } else {
-            // Caso contrário, segue diretamente para casa o mais rápido possível
-            moveTowardsTargetBFS(ghost, home, walls)
+            // Caso Pac-Man não esteja bloqueando ou fantasma não esteja vulnerável, tenta ir para casa
+            val moveTowardsHome = nonBlockingMoves.minByOrNull { move ->
+                calculateManhattanDistance(move, home)
+            }
+
+            // Se não houver movimentos não bloqueados, tenta o melhor movimento disponível
+            moveTowardsHome ?: moveTowardsTargetBFS(ghost, home, walls)
         }
     }
 
@@ -438,8 +473,8 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
                 Pair(1, 18), Pair(2, 18), Pair(3, 18), Pair(4, 18), Pair(6, 18), Pair(7, 18), Pair(8, 18), Pair(9, 18), Pair(10, 18), Pair(11, 18), Pair(12, 18), Pair(13, 18), Pair(14, 18), Pair(15, 18), Pair(16, 18), Pair(17, 18), Pair(19, 18), Pair(20, 18), Pair(21, 18), Pair(22, 18),
                 Pair(2, 19), Pair(4, 19), Pair(6, 19), Pair(8, 19), Pair(15, 19), Pair(17, 19), Pair(19, 19), Pair(21, 19),
                 Pair(2, 20), Pair(4, 20), Pair(6, 20), Pair(8, 20), Pair(9, 20), Pair(10, 20), Pair(13, 20), Pair(14, 20), Pair(15, 20), Pair(17, 20), Pair(19, 20), Pair(21, 20),
-                Pair(0, 21), Pair(1, 21), Pair(2, 21), Pair(4, 21), Pair(5, 21), Pair(10, 21), Pair(13, 21), Pair(18, 21), Pair(19, 21), Pair(21, 21), Pair(22, 21), Pair(23, 21),
-                Pair(0, 22), Pair(4, 22), Pair(10, 22), Pair(13, 22), Pair(19, 22), Pair(23, 22),
+                Pair(0, 21), Pair(1, 21), Pair(2, 21), Pair(4, 21), Pair(5, 21), Pair(8, 21), Pair(10, 21), Pair(13, 21), Pair(15, 21), Pair(18, 21), Pair(19, 21), Pair(21, 21), Pair(22, 21), Pair(23, 21),
+                Pair(0, 22), Pair(4, 22), Pair(8, 22), Pair(10, 22), Pair(13, 22), Pair(15, 22), Pair(19, 22), Pair(23, 22),
                 Pair(0, 23), Pair(1, 23), Pair(2, 23), Pair(3, 23), Pair(4, 23), Pair(5, 23), Pair(6, 23), Pair(7, 23), Pair(8, 23), Pair(9, 23), Pair(10, 23), Pair(11, 23), Pair(12, 23), Pair(13, 23), Pair(14, 23), Pair(15, 23), Pair(16, 23), Pair(17, 23), Pair(18, 23), Pair(19, 23), Pair(20, 23), Pair(21, 23), Pair(22, 23), Pair(23, 23)
             )
         }
@@ -476,7 +511,7 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
                 Pair(0, 19), Pair(1, 19), Pair(3, 19), Pair(5, 19), Pair(7, 19), Pair(9, 19), Pair(10, 19), Pair(11, 19), Pair(12, 19), Pair(13, 19), Pair(14, 19), Pair(16, 19), Pair(18, 19), Pair(20, 19), Pair(22, 19), Pair(23, 19),
                 Pair(0, 20), Pair(1, 20), Pair(3, 20), Pair(5,20), Pair(7, 20), Pair(11, 20), Pair(12, 20), Pair(16, 20), Pair(18, 20), Pair(20, 20), Pair(22, 20), Pair(23, 20),
                 Pair(3, 21), Pair(7, 21), Pair(9, 21), Pair(11, 21), Pair(12, 21), Pair(14, 21), Pair(16, 21), Pair(20, 21),
-                Pair(1, 22), Pair(2, 22), Pair(3, 22), Pair(5, 22), Pair(6, 22), Pair(7, 22), Pair(8, 22), Pair(9, 22), Pair(11, 22), Pair(12, 22), Pair(14, 22), Pair(15, 22), Pair(16, 22), Pair(17, 22), Pair(18, 22), Pair(20, 22), Pair(21, 22), Pair(22, 22)
+                Pair(1, 22), Pair(2, 22), Pair(3, 22), Pair(5, 22), Pair(6, 22), Pair(7, 22), Pair(9, 22), Pair(11, 22), Pair(12, 22), Pair(14, 22), Pair(16, 22), Pair(17, 22), Pair(18, 22), Pair(20, 22), Pair(21, 22), Pair(22, 22)
             )
         }
 
