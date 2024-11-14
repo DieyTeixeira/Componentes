@@ -105,6 +105,74 @@ class TicTacToeGame(private val scope: CoroutineScope) {
     }
 }
 
+@Composable
+fun GameVelha() {
+    val scope = rememberCoroutineScope()
+    val game = remember { TicTacToeGame(scope) }
+    val state = game.state.collectAsState(initial = TicTacToeState())
+    var showGameOverScreen by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.value.isGameOver) {
+        if (state.value.isGameOver) {
+            delay(500L) // Delay de 1 segundo (1000 milissegundos)
+            showGameOverScreen = true // Define que a tela de game over deve ser exibida
+        }
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        if (!showGameOverScreen) {
+            BoardVelha(state = state.value) { index ->
+                game.playMove(index)
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp)
+                    .background(LightGreen),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "vez de jogar  ",
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontSize = 20.sp
+                        ),
+                        color = DarkGreen
+                    )
+                    DrawSymbol(state.value.currentPlayer, 4.dp)
+                }
+            }
+        }
+
+        if (state.value.isGameOver && showGameOverScreen) {
+            GameOverVelha(winner = state.value.winner) {
+                game.reset()
+                showGameOverScreen = false
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp)
+                    .background(LightGreen),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "",
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontSize = 20.sp
+                    ),
+                    color = DarkGreen
+                )
+            }
+        }
+    }
+}
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BoardVelha(state: TicTacToeState, onCellClick: (Int) -> Unit) {
@@ -203,74 +271,6 @@ fun GameOverVelha(winner: String?, onRestart: () -> Unit) {
                 Text(
                     text = "criado por Diey Teixeira",
                     style = MaterialTheme.typography.displayMedium.copy(fontSize = 20.sp),
-                    color = DarkGreen
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun GameVelha() {
-    val scope = rememberCoroutineScope()
-    val game = remember { TicTacToeGame(scope) }
-    val state = game.state.collectAsState(initial = TicTacToeState())
-    var showGameOverScreen by remember { mutableStateOf(false) }
-
-    LaunchedEffect(state.value.isGameOver) {
-        if (state.value.isGameOver) {
-            delay(500L) // Delay de 1 segundo (1000 milissegundos)
-            showGameOverScreen = true // Define que a tela de game over deve ser exibida
-        }
-    }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-        if (!showGameOverScreen) {
-            BoardVelha(state = state.value) { index ->
-                game.playMove(index)
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(30.dp)
-                    .background(LightGreen),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "vez de jogar  ",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontSize = 20.sp
-                        ),
-                        color = DarkGreen
-                    )
-                    DrawSymbol(state.value.currentPlayer, 4.dp)
-                }
-            }
-        }
-
-        if (state.value.isGameOver && showGameOverScreen) {
-            GameOverVelha(winner = state.value.winner) {
-                game.reset()
-                showGameOverScreen = false
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(30.dp)
-                    .background(LightGreen),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontSize = 20.sp
-                    ),
                     color = DarkGreen
                 )
             }

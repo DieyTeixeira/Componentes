@@ -319,7 +319,7 @@ fun GameTetris() {
             }
         }
 
-        Controls { move ->
+        ButtonsTetris { move ->
             game.move(
                 when (move) {
                     Move.Left -> Move.Left
@@ -391,75 +391,6 @@ fun GameOverTetris(score: Int, highScore: Int, onRestart: () -> Unit) {
             }
         }
     }
-}
-
-@Composable
-fun Controls(onMove: (Move) -> Unit) {
-    val buttonSize = 64.dp
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-        Row {
-            Box(
-                modifier = Modifier
-                    .height(buttonSize)
-                    .width(buttonSize)
-                    .background(
-                        DarkGreen,
-                        RoundedCornerShape(10.dp)
-                    )
-                    .clickable { onMove(Move.Left) },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Spacer(modifier = Modifier.size(15.dp))
-            Box(
-                modifier = Modifier
-                    .height(buttonSize)
-                    .width(buttonSize)
-                    .background(
-                        DarkGreen,
-                        RoundedCornerShape(10.dp)
-                    )
-                    .clickable { onMove(Move.Right) },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Spacer(modifier = Modifier.size(15.dp))
-            Box(
-                modifier = Modifier
-                    .height(buttonSize)
-                    .width(buttonSize)
-                    .background(
-                        DarkGreen,
-                        RoundedCornerShape(10.dp)
-                    )
-                    .clickable { onMove(Move.Drop) },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-    }
-}
-
-enum class Move {
-    Left, Right, Drop
 }
 
 @Composable
@@ -541,4 +472,73 @@ fun BoardTetris(state: TetrisState) {
             }
         }
     }
+}
+
+@Composable
+fun ButtonsTetris(onMove: (Move) -> Unit) {
+    val buttonSize = 64.dp
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+        Row {
+            Box(
+                modifier = Modifier
+                    .height(buttonSize)
+                    .width(buttonSize)
+                    .background(
+                        DarkGreen,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onMove(Move.Left) },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Spacer(modifier = Modifier.size(15.dp))
+            Box(
+                modifier = Modifier
+                    .height(buttonSize)
+                    .width(buttonSize)
+                    .background(
+                        DarkGreen,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onMove(Move.Right) },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Spacer(modifier = Modifier.size(15.dp))
+            Box(
+                modifier = Modifier
+                    .height(buttonSize)
+                    .width(buttonSize)
+                    .background(
+                        DarkGreen,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onMove(Move.Drop) },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+enum class Move {
+    Left, Right, Drop
 }

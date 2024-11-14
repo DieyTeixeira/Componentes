@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.*
 
 data class PacManState(
     val pacman: Pair<Int, Int>,
@@ -45,9 +46,10 @@ data class PacManState(
     val entry: List<Pair<Int, Int>>,
     val score: Int = 0,
     val direction: String = "right",
+    val currentDirection: Pair<Int, Int> = Pair(1, 0),
     val isGameOver: Boolean = false,
     val isInvulnerable: Boolean = false,
-    val isGhostVulnerable: Boolean = false
+    val ghostVulnerabilities: List<Boolean> = listOf(false, false, false, false)
 )
 
 class PacManGame(private val scope: CoroutineScope, context: Context) {
@@ -75,8 +77,8 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
             }
         }
 
-    private var gameJob: kotlinx.coroutines.Job? = null
-    private var invulnerabilityJob: kotlinx.coroutines.Job? = null
+    private var gameJob: Job? = null
+    private var invulnerabilityJob: Job? = null
 
     init {
         startGame()
@@ -89,50 +91,77 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
         gameJob = scope.launch {
             mutableState.update { it.copy(isInvulnerable = true) } // Pac-Man começa invulnerável
             invulnerabilityJob = launch {
-                delay(3000L) // Pac-Man é invulnerável por 3 segundos
+                delay(5000L) // Pac-Man é invulnerável por 3 segundos
                 mutableState.update { it.copy(isInvulnerable = false) }
             }
 
             while (true) {
-                delay(300L)
-                mutableState.update {
-                    if (it.isGameOver) return@update it
+                delay(200L)
+                mutableState.update { currentState ->
+                    if (currentState.isGameOver) return@update currentState
 
-                    // Movimento do Pac-Man
-                    val newPacmanPosition = movePacMan(it.pacman, it.walls, it.home, it.entry)
-                    val ateFood = it.food.contains(newPacmanPosition)
-                    val ateBestFood = it.bestFood.contains(newPacmanPosition)
-                    val remainingFood = it.food.filter { food -> food != newPacmanPosition }
-                    val remainingBestFood = it.bestFood.filter { bestFood -> bestFood != newPacmanPosition }
+                    // Tentar o movimento de Pac-Man
+                    val newPacmanPosition = movePacMan(
+                        currentState.pacman,
+                        currentState.walls,
+                        currentState.home,
+                        currentState.entry,
+                        move, // Direção desejada
+                        currentState.currentDirection // Direção atual
+                    )
+
+                    // Verifica se Pac-Man comeu comida
+                    val ateFood = currentState.food.contains(newPacmanPosition)
+                    val ateBestFood = currentState.bestFood.contains(newPacmanPosition)
+                    val remainingFood = currentState.food.filter { food -> food != newPacmanPosition }
+                    val remainingBestFood = currentState.bestFood.filter { bestFood -> bestFood != newPacmanPosition }
 
                     // Movimento dos fantasmas
                     val newGhostPositions = moveGhosts(
-                        it.ghosts,
+                        currentState.ghosts,
                         newPacmanPosition,
-                        it.walls,
-                        it.home,
-                        it.isGhostVulnerable
+                        currentState.walls,
+                        currentState.home,
+                        currentState.ghostVulnerabilities
                     )
 
                     // Verificar colisão com fantasmas
-                    val isCollision = newGhostPositions.contains(newPacmanPosition) && !it.isInvulnerable
+                    val isCollision = newGhostPositions.contains(newPacmanPosition) && !currentState.isInvulnerable
 
                     // Atualizar vulnerabilidade dos fantasmas ao comer "bestFood"
-                    val newState = it.copy(
-                        pacman = if (isCollision) it.pacman else newPacmanPosition,
+                    val newGhostVulnerabilities = if (ateBestFood) {
+                        // Todos os fantasmas ficam vulneráveis
+                        listOf(true, true, true, true)
+                    } else {
+                        // Mantém o estado atual da vulnerabilidade dos fantasmas
+                        currentState.ghostVulnerabilities
+                    }
+
+                    // Atualizar vulnerabilidade dos fantasmas ao comer "bestFood"
+                    val newState = currentState.copy(
+                        pacman = if (isCollision) currentState.pacman else newPacmanPosition,
                         food = remainingFood,
                         bestFood = remainingBestFood,
                         ghosts = newGhostPositions,
-                        score = if (ateFood) it.score + 5 else if (ateBestFood) it.score + 10 else it.score,
+                        score = if (ateFood) currentState.score + 5 else if (ateBestFood) currentState.score + 10 else currentState.score,
                         isGameOver = isCollision || (remainingFood.isEmpty() && remainingBestFood.isEmpty()),
-                        isGhostVulnerable = ateBestFood || it.isGhostVulnerable
+                        ghostVulnerabilities  = newGhostVulnerabilities,
+                        currentDirection = if (newPacmanPosition != currentState.pacman) move else currentState.currentDirection // Atualizar a direção atual somente se o movimento foi bem-sucedido
                     )
 
                     // Se os fantasmas ficam vulneráveis ao comer "bestFood"
                     if (ateBestFood) {
                         scope.launch {
                             delay(5000L) // Fantasmas vulneráveis por 5 segundos
-                            mutableState.update { state -> state.copy(isGhostVulnerable = false) }
+                            mutableState.update { state ->
+                                state.copy(ghostVulnerabilities = state.ghostVulnerabilities.mapIndexed { index, isVulnerable ->
+                                    if (isVulnerable && currentState.ghosts[index] == currentState.home[index]) {
+                                        false // O fantasma volta ao normal ao chegar em casa
+                                    } else {
+                                        isVulnerable
+                                    }
+                                })
+                            }
                         }
                     }
 
@@ -146,159 +175,225 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
         pacman: Pair<Int, Int>,
         walls: List<Pair<Int, Int>>,
         home: List<Pair<Int, Int>>,
-        entry: List<Pair<Int, Int>>
+        entry: List<Pair<Int, Int>>,
+        desiredDirection: Pair<Int, Int>,
+        currentDirection: Pair<Int, Int>
     ): Pair<Int, Int> {
-
-        // Calcula a nova posição do Pac-Man
+        // Tentar o movimento na direção desejada
         val newPacmanPosition = Pair(
-            pacman.first + move.first,
-            pacman.second + move.second
+            pacman.first + desiredDirection.first,
+            pacman.second + desiredDirection.second
         )
 
-        // Verifica se a nova posição está dentro dos limites do tabuleiro
-        val withinBounds = newPacmanPosition.first in 0 until BOARD_SIZE &&
-                newPacmanPosition.second in 0 until BOARD_SIZE
+        val withinBounds = newPacmanPosition.first in 0 until PacManGame.BOARD_SIZE &&
+                newPacmanPosition.second in 0 until PacManGame.BOARD_SIZE
 
-        // Se estiver dentro dos limites e não for uma parede, o Pac-Man pode se mover
-        return if (withinBounds && !walls.contains(newPacmanPosition) && !home.contains(newPacmanPosition) && !entry.contains(newPacmanPosition)) {
-            newPacmanPosition
+        // Verificar se a nova posição é válida
+        if (withinBounds && !walls.contains(newPacmanPosition) && !home.contains(newPacmanPosition) && !entry.contains(newPacmanPosition)) {
+            return newPacmanPosition // Se o movimento desejado for válido, Pac-Man se move
+        }
+
+        // Caso contrário, continuar na direção atual
+        val continuePacmanPosition = Pair(
+            pacman.first + currentDirection.first,
+            pacman.second + currentDirection.second
+        )
+
+        val currentWithinBounds = continuePacmanPosition.first in 0 until PacManGame.BOARD_SIZE &&
+                continuePacmanPosition.second in 0 until PacManGame.BOARD_SIZE
+
+        // Verificar se a direção atual é válida e continuar nela
+        return if (currentWithinBounds && !walls.contains(continuePacmanPosition) && !home.contains(continuePacmanPosition) && !entry.contains(continuePacmanPosition)) {
+            continuePacmanPosition // Continua na direção atual
         } else {
-            pacman // Caso contrário, ele permanece na posição atual
+            pacman // Se nenhum movimento for válido, Pac-Man permanece na posição
         }
     }
 
+    // Movimenta todos os fantasmas
     private fun moveGhosts(
         ghosts: List<Pair<Int, Int>>,
         pacmanPosition: Pair<Int, Int>,
         walls: List<Pair<Int, Int>>,
         home: List<Pair<Int, Int>>,
-        isGhostVulnerable: Boolean
+        ghostVulnerabilities: List<Boolean>
     ): List<Pair<Int, Int>> {
         return ghosts.mapIndexed { index, ghost ->
-            when (index) {
-                0 -> { // Blinky
-                    if (isGhostVulnerable) {
-                        moveToHome(ghost, home[0], walls)
-                    } else {
-                        moveToPacMan(ghost, pacmanPosition, walls) // Persegue o Pac-Man
+            if (ghostVulnerabilities[index]) { // Verifica se o fantasma está vulnerável
+                moveToHome(ghost, home[index], walls, pacmanPosition, ghostVulnerabilities[index], index)
+            } else {
+                when (index) {
+                    0 -> moveTowardsTargetBFS(ghost, pacmanPosition, walls) // Blinky
+                    1 -> moveToAnticipatedPosition(ghost, pacmanPosition, move, walls) // Pinky
+                    2 -> {
+                        val blinkyPosition = ghosts[0]
+                        moveToInkyPosition(ghost, pacmanPosition, blinkyPosition, walls) // Inky
                     }
+                    3 -> moveRandomlyOrChase(ghost, pacmanPosition, walls) // Clyde
+                    else -> ghost
                 }
-                1 -> { // Pinky
-                    if (isGhostVulnerable) {
-                        moveToHome(ghost, home[1], walls)
-                    } else {
-                        moveToAnticipatedPosition(ghost, pacmanPosition, walls) // Antecipação do movimento
-                    }
-                }
-                2 -> { // Inky
-                    if (isGhostVulnerable) {
-                        moveToHome(ghost, home[2], walls)
-                    } else {
-                        moveToInkyPosition(ghost, pacmanPosition, walls)
-                    }
-                }
-                3 -> { // Clyde
-                    if (isGhostVulnerable) {
-                        moveToHome(ghost, home[3], walls)
-                    } else {
-                        moveRandomlyOrChase(ghost, pacmanPosition, walls)
-                    }
-                }
-                else -> ghost
             }
         }
     }
 
-    // Função para mover o Blinky para a posição do Pac-Man
-    private fun moveToPacMan(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        return moveTowardsTarget(ghost, pacmanPosition, walls)
+    // Movimenta o fantasma utilizando BFS para evitar paredes
+    private fun moveTowardsTargetBFS(ghost: Pair<Int, Int>, target: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
+        // Se a posição atual for a mesma do alvo, não precisa mover
+        if (ghost == target) return ghost
+
+        // Realiza uma busca em largura (BFS) para encontrar o caminho mais curto
+        val queue = ArrayDeque<Pair<Int, Int>>() // Fila de nós a serem explorados
+        queue.add(ghost)
+
+        val cameFrom = mutableMapOf<Pair<Int, Int>, Pair<Int, Int>?>() // Mapeia o caminho de volta
+        cameFrom[ghost] = null
+
+        // Lista de movimentos possíveis (direita, esquerda, baixo, cima)
+        val directions = listOf(
+            Pair(1, 0), // Direita
+            Pair(-1, 0), // Esquerda
+            Pair(0, 1), // Baixo
+            Pair(0, -1) // Cima
+        )
+
+        // Executa BFS
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+
+            // Se chegou ao alvo (Pac-Man), reconstrói o caminho de volta e faz o movimento
+            if (current == target) {
+                return reconstructPath(cameFrom, current)
+            }
+
+            // Explora as direções possíveis a partir do ponto atual
+            for (direction in directions) {
+                val neighbor = Pair(current.first + direction.first, current.second + direction.second)
+
+                // Verifica se o vizinho está dentro dos limites e não é uma parede
+                if (neighbor.first in 0 until BOARD_SIZE &&
+                    neighbor.second in 0 until BOARD_SIZE &&
+                    !walls.contains(neighbor) &&
+                    !cameFrom.containsKey(neighbor)) { // Evitar visitar o mesmo nó mais de uma vez
+                    queue.add(neighbor)
+                    cameFrom[neighbor] = current
+                }
+            }
+        }
+
+        // Se não encontrou caminho, fica parado
+        return ghost
     }
 
-    // Função para mover o Pinky, que tenta antecipar o Pac-Man de forma inteligente
-    private fun moveToAnticipatedPosition(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        val direction = Pair(pacmanPosition.first - ghost.first, pacmanPosition.second - ghost.second)
+    // Reconstrói o caminho a partir do resultado do BFS
+    private fun reconstructPath(cameFrom: Map<Pair<Int, Int>, Pair<Int, Int>?>, current: Pair<Int, Int>): Pair<Int, Int> {
+        var tempCurrent = current
+        val path = mutableListOf<Pair<Int, Int>>()
+        while (cameFrom[tempCurrent] != null) {
+            path.add(tempCurrent)
+            tempCurrent = cameFrom[tempCurrent]!!
+        }
+        // Retorna o primeiro passo da rota para o fantasma seguir
+        return path.lastOrNull() ?: current
+    }
+
+    // Pinky antecipa 4 blocos à frente na direção do Pac-Man
+    private fun moveToAnticipatedPosition(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, pacmanDirection: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
         val anticipatedPosition = Pair(
-            pacmanPosition.first + direction.first * 2,
-            pacmanPosition.second + direction.second * 2
+            pacmanPosition.first + pacmanDirection.first * 4,
+            pacmanPosition.second + pacmanDirection.second * 4
         )
-        return moveTowardsTarget(ghost, anticipatedPosition, walls)
+        return moveTowardsTargetBFS(ghost, anticipatedPosition, walls)
     }
 
-    // Função para mover o Inky, com uma estratégia melhorada
-    private fun moveToInkyPosition(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        val blinkyPosition = Pair(ghost.first + 1, ghost.second)
-        val targetPosition = Pair(
-            (pacmanPosition.first + blinkyPosition.first) / 2,
-            (pacmanPosition.second + blinkyPosition.second) / 2
-        )
-        return moveTowardsTarget(ghost, targetPosition, walls)
+    // Inky calcula seu alvo com base na posição de Blinky e Pac-Man
+    private fun moveToInkyPosition(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, blinkyPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
+        val deltaX = pacmanPosition.first - blinkyPosition.first
+        val deltaY = pacmanPosition.second - blinkyPosition.second
+        val targetPosition = Pair(pacmanPosition.first + deltaX, pacmanPosition.second + deltaY)
+        return moveTowardsTargetBFS(ghost, targetPosition, walls)
     }
 
-    // Função para o Clyde, que alterna entre seguir o Pac-Man e mover aleatoriamente com um comportamento mais eficiente
+    // Clyde alterna entre perseguir e fugir dependendo da distância
     private fun moveRandomlyOrChase(ghost: Pair<Int, Int>, pacmanPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        return if (Math.random() > 0.4) {
-            moveToPacMan(ghost, pacmanPosition, walls)
-        } else {
+        val distanceToPacman = Math.abs(ghost.first - pacmanPosition.first) + Math.abs(ghost.second - pacmanPosition.second)
+        return if (distanceToPacman < 8) {
             moveRandomly(ghost, walls)
+        } else {
+            moveTowardsTargetBFS(ghost, pacmanPosition, walls)
         }
     }
 
-    // Função para mover o fantasma vulnerável de volta para a "Home"
-    private fun moveToHome(ghost: Pair<Int, Int>, home: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        return moveTowardsTarget(ghost, home, walls)
-    }
-
-    // Função para mover aleatoriamente, com inteligência para evitar becos sem saída
-    private fun moveRandomly(ghost: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        val possibleMoves = listOf(
-            Pair(ghost.first + 1, ghost.second),  // Direita
-            Pair(ghost.first - 1, ghost.second),  // Esquerda
-            Pair(ghost.first, ghost.second + 1),  // Baixo
-            Pair(ghost.first, ghost.second - 1)   // Cima
-        ).filter { move ->
-            !walls.contains(move) && move.first in 0 until BOARD_SIZE &&
-                    move.second in 0 until BOARD_SIZE
-
-        }
-
-        return possibleMoves.random()  // Escolhe um movimento aleatório
-    }
-
-    // Função para mover o fantasma em direção ao alvo (pacman ou home)
-    private fun moveTowardsTarget(ghost: Pair<Int, Int>, targetPosition: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
-        // Lista de movimentos possíveis (direções cardinais)
-        val possibleMoves = listOf(
-            Pair(ghost.first + 1, ghost.second),  // Direita
-            Pair(ghost.first - 1, ghost.second),  // Esquerda
-            Pair(ghost.first, ghost.second + 1),  // Baixo
-            Pair(ghost.first, ghost.second - 1)   // Cima
-        ).filter { move ->
-            // Verificar se o movimento não é bloqueado por uma parede e se está dentro dos limites do tabuleiro
-            !walls.contains(move) && move.first in 0 until BOARD_SIZE && move.second in 0 until BOARD_SIZE
-        }
-
-        // Se não houver movimentos válidos (beco sem saída), o fantasma ficará parado
-        if (possibleMoves.isEmpty()) {
-            return ghost
-        }
-
-        // Verificar se a posição do pacman está bloqueada nas direções mais próximas
-        val bestMove = possibleMoves.minByOrNull { move ->
-            val deltaX = targetPosition.first - move.first
-            val deltaY = targetPosition.second - move.second
-            Math.abs(deltaX) + Math.abs(deltaY)  // Distância Manhattan
-        }
-
-        // Se o fantasma está alternando entre dois pontos, force a escolha de uma nova direção
-        if (ghost == bestMove) {
-            // Tenta alternativas de movimento para fugir do ciclo
-            val alternativeMoves = possibleMoves.filter { it != ghost }
-            if (alternativeMoves.isNotEmpty()) {
-                return alternativeMoves.random()  // Se estiver preso, tenta um movimento diferente aleatoriamente
+    // Movimenta o fantasma para a "Home"
+    private fun moveToHome(
+        ghost: Pair<Int, Int>,
+        home: Pair<Int, Int>,
+        walls: List<Pair<Int, Int>>,
+        pacmanPosition: Pair<Int, Int>,
+        isVulnerable: Boolean,
+        ghostId: Int
+    ): Pair<Int, Int> {
+        // Se o fantasma já chegou à "home", ele volta ao comportamento normal (não vulnerável)
+        if (ghost == home) {
+            // O fantasma chegou em casa, então ele não é mais vulnerável.
+            mutableState.update { state ->
+                val updatedVulnerabilities = state.ghostVulnerabilities.toMutableList()
+                updatedVulnerabilities[ghostId] = false // Desativar a vulnerabilidade do fantasma específico
+                state.copy(ghostVulnerabilities = updatedVulnerabilities)
             }
+            return ghost // Fica parado em casa ou pode iniciar uma nova estratégia
         }
 
-        return bestMove ?: ghost
+        // Distância máxima para começar a evitar o Pac-Man
+        val avoidanceRadius = 4
+
+        // Calcula a distância de Manhattan do Pac-Man
+        val distanceToPacman = calculateManhattanDistance(ghost, pacmanPosition)
+
+        // Movimentos possíveis usando BFS para retornar à casa
+        val possibleMoves = getPossibleMoves(ghost, walls)
+
+        // Verifica se há algum movimento possível
+        if (possibleMoves.isEmpty()) {
+            return ghost // Se não houver movimentos válidos, o fantasma fica parado
+        }
+
+        return if (isVulnerable && distanceToPacman < avoidanceRadius) {
+            // Se o Pac-Man estiver muito perto, prioriza se afastar dele
+            possibleMoves.maxByOrNull { move ->
+                val distanceFromPacman = calculateManhattanDistance(move, pacmanPosition)
+                val distanceFromHome = calculateManhattanDistance(move, home)
+
+                // Queremos um movimento que aumente a distância de Pac-Man e também tente ir para casa
+                distanceFromPacman - distanceFromHome / 2 // Fator de equilíbrio
+            } ?: ghost
+        } else {
+            // Caso contrário, segue diretamente para casa o mais rápido possível
+            moveTowardsTargetBFS(ghost, home, walls)
+        }
+    }
+
+    // Função auxiliar para calcular a distância de Manhattan
+    private fun calculateManhattanDistance(point1: Pair<Int, Int>, point2: Pair<Int, Int>): Int {
+        return Math.abs(point1.first - point2.first) + Math.abs(point1.second - point2.second)
+    }
+
+    // Movimenta aleatoriamente o fantasma
+    private fun moveRandomly(ghost: Pair<Int, Int>, walls: List<Pair<Int, Int>>): Pair<Int, Int> {
+        val possibleMoves = getPossibleMoves(ghost, walls)
+        return possibleMoves.randomOrNull() ?: ghost
+    }
+
+    // Função para obter os movimentos possíveis sem bater nas paredes
+    private fun getPossibleMoves(ghost: Pair<Int, Int>, walls: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
+        val possibleMoves = listOf(
+            Pair(ghost.first + 1, ghost.second),  // Direita
+            Pair(ghost.first - 1, ghost.second),  // Esquerda
+            Pair(ghost.first, ghost.second + 1),  // Baixo
+            Pair(ghost.first, ghost.second - 1)   // Cima
+        ).filter { move ->
+            move.first in 0 until BOARD_SIZE && move.second in 0 until BOARD_SIZE && !walls.contains(move)
+        }
+        return possibleMoves
     }
 
     fun reset() {
@@ -410,11 +505,11 @@ fun GamePacMan() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         state.value?.let {
             if (it.isGameOver) {
-                GameOverPacman(score = it.score) {
+                GameOverPacMan(score = it.score) {
                     game.reset()
                 }
             } else {
-                BoardPacman(it)
+                BoardPacMan(it)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -432,14 +527,14 @@ fun GamePacMan() {
                 }
             }
         }
-        ButtonsPacman {
+        ButtonsPacMan {
             game.move = it
         }
     }
 }
 
 @Composable
-fun GameOverPacman(score: Int, onRestart: () -> Unit) {
+fun GameOverPacMan(score: Int, onRestart: () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
@@ -462,7 +557,7 @@ fun GameOverPacman(score: Int, onRestart: () -> Unit) {
 }
 
 @Composable
-fun BoardPacman(state: PacManState) {
+fun BoardPacMan(state: PacManState) {
     BoxWithConstraints(
         Modifier
             .background(LightGreen)
@@ -530,7 +625,7 @@ fun BoardPacman(state: PacManState) {
                     .offset(x = tileSize * ghost.first, y = tileSize * ghost.second)
                     .size(tileSize)
                     .background(
-                        if (state.isGhostVulnerable) GhostVulnerable else ghostColors.getOrElse(index) { Color.Gray },
+                        if (state.ghostVulnerabilities.getOrNull(index) == true) GhostVulnerable else ghostColors.getOrElse(index) { Color.Gray },
                         RoundedCornerShape(20.dp, 20.dp, 10.dp, 10.dp)
                     ),
                 contentAlignment = Alignment.TopCenter
@@ -543,7 +638,7 @@ fun BoardPacman(state: PacManState) {
                         modifier = Modifier
                             .size(tileSize / 3)
                             .background(
-                                if (state.isGhostVulnerable) Color.Gray else Color.White,
+                                if (state.ghostVulnerabilities.getOrNull(index) == true) Color.Gray else Color.White,
                                 RoundedCornerShape(100)
                             ),
                         contentAlignment = Alignment.BottomCenter
@@ -552,7 +647,7 @@ fun BoardPacman(state: PacManState) {
                             modifier = Modifier
                                 .size(tileSize / 6)
                                 .background(
-                                    if (state.isGhostVulnerable) Color.White else Color.Black,
+                                    if (state.ghostVulnerabilities.getOrNull(index) == true) Color.White else Color.Black,
                                     RoundedCornerShape(100)
                                 )
                         )
@@ -562,7 +657,7 @@ fun BoardPacman(state: PacManState) {
                         modifier = Modifier
                             .size(tileSize / 3)
                             .background(
-                                if (state.isGhostVulnerable) Color.Gray else Color.White,
+                                if (state.ghostVulnerabilities.getOrNull(index) == true) Color.Gray else Color.White,
                                 RoundedCornerShape(100)
                             ),
                         contentAlignment = Alignment.BottomCenter
@@ -571,7 +666,7 @@ fun BoardPacman(state: PacManState) {
                             modifier = Modifier
                                 .size(tileSize / 6)
                                 .background(
-                                    if (state.isGhostVulnerable) Color.White else Color.Black,
+                                    if (state.ghostVulnerabilities.getOrNull(index) == true) Color.White else Color.Black,
                                     RoundedCornerShape(100)
                                 )
                         )
@@ -600,7 +695,7 @@ fun BoardPacman(state: PacManState) {
 }
 
 @Composable
-fun ButtonsPacman(onDirectionChange: (Pair<Int, Int>) -> Unit) {
+fun ButtonsPacMan(onDirectionChange: (Pair<Int, Int>) -> Unit) {
     val buttonSize = 64.dp
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
         Box(

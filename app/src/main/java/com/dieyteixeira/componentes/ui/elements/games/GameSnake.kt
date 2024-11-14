@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieyteixeira.componentes.ui.theme.DarkGreen
@@ -208,7 +207,7 @@ fun GameSnake() {
                 }
             }
         }
-        Buttons {
+        ButtonsSnake {
             game.move = it
         }
     }
@@ -280,7 +279,80 @@ fun GameOverSnake(score: Int, highScore: Int, onRestart: () -> Unit) {
 }
 
 @Composable
-fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
+fun BoardSnake(state: State) {
+    BoxWithConstraints(
+        Modifier
+            .background(LightGreen)
+            .padding(16.dp)
+    ) {
+        val tileSize = maxWidth / Game.BOARD_SIZE
+
+        Box(
+            Modifier
+                .size(maxWidth)
+                .border(2.dp, DarkGreen)
+        )
+
+        Box(
+            Modifier
+                .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
+                .size(tileSize)
+                .rotate(45f)
+                .background(Color.Transparent)
+        ) {
+            Column {
+                Row {
+                    Box(
+                        Modifier
+                            .size(tileSize / 2)
+                            .padding(0.8.dp)
+                            .background(DarkGreen, RoundedCornerShape(1.dp))
+                    )
+                    Box(
+                        Modifier
+                            .size(tileSize / 2)
+                            .padding(0.8.dp)
+                            .background(DarkGreen, RoundedCornerShape(1.dp))
+                    )
+                }
+                Row {
+                    Box(
+                        Modifier
+                            .size(tileSize / 2)
+                            .padding(0.8.dp)
+                            .background(DarkGreen, RoundedCornerShape(1.dp))
+                    )
+                    Box(
+                        Modifier
+                            .size(tileSize / 2)
+                            .padding(0.8.dp)
+                            .background(DarkGreen, RoundedCornerShape(1.dp))
+                    )
+                }
+            }
+        }
+
+        state.snake.forEach {
+            Box(
+                modifier = Modifier
+                    .offset(x = tileSize * it.first, y = tileSize * it.second)
+                    .size(tileSize)
+                    .background(DarkGreen, RoundedCornerShape(2.dp))
+                    .border(0.dp, LightGreen)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(tileSize * 0.75f)
+                        .align(Alignment.Center)
+                        .border(1.5.dp, LightGreen, RoundedCornerShape(1.dp))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ButtonsSnake(onDirectionChange: (Pair<Int, Int>) -> Unit) {
     val buttonSize = 64.dp
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
         Box(
@@ -357,85 +429,6 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
                 tint = Color.White,
                 modifier = Modifier.size(32.dp)
             )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun ButtonsPreview() {
-    Buttons {}
-}
-
-@Composable
-fun BoardSnake(state: State) {
-    BoxWithConstraints(
-        Modifier
-            .background(LightGreen)
-            .padding(16.dp)
-    ) {
-        val tileSize = maxWidth / Game.BOARD_SIZE
-
-        Box(
-            Modifier
-                .size(maxWidth)
-                .border(2.dp, DarkGreen)
-        )
-
-        Box(
-            Modifier
-                .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
-                .size(tileSize)
-                .rotate(45f)
-                .background(Color.Transparent)
-        ) {
-            Column {
-                Row {
-                    Box(
-                        Modifier
-                            .size(tileSize / 2)
-                            .padding(0.8.dp)
-                            .background(DarkGreen, RoundedCornerShape(1.dp))
-                    )
-                    Box(
-                        Modifier
-                            .size(tileSize / 2)
-                            .padding(0.8.dp)
-                            .background(DarkGreen, RoundedCornerShape(1.dp))
-                    )
-                }
-                Row {
-                    Box(
-                        Modifier
-                            .size(tileSize / 2)
-                            .padding(0.8.dp)
-                            .background(DarkGreen, RoundedCornerShape(1.dp))
-                    )
-                    Box(
-                        Modifier
-                            .size(tileSize / 2)
-                            .padding(0.8.dp)
-                            .background(DarkGreen, RoundedCornerShape(1.dp))
-                    )
-                }
-            }
-        }
-
-        state.snake.forEach {
-            Box(
-                modifier = Modifier
-                    .offset(x = tileSize * it.first, y = tileSize * it.second)
-                    .size(tileSize)
-                    .background(DarkGreen, RoundedCornerShape(2.dp))
-                    .border(0.dp, LightGreen)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(tileSize * 0.75f)
-                        .align(Alignment.Center)
-                        .border(1.5.dp, LightGreen, RoundedCornerShape(1.dp))
-                )
-            }
         }
     }
 }
