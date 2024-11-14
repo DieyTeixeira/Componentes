@@ -345,7 +345,6 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
     ): Pair<Int, Int> {
         // Se o fantasma já chegou à "home", ele volta ao comportamento normal (não vulnerável)
         if (ghost == home) {
-            // O fantasma chegou em casa, então ele não é mais vulnerável.
             mutableState.update { state ->
                 val updatedVulnerabilities = state.ghostVulnerabilities.toMutableList()
                 updatedVulnerabilities[ghostId] = false // Desativar a vulnerabilidade do fantasma específico
@@ -356,54 +355,39 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
 
         // Distância máxima para começar a evitar o Pac-Man
         val avoidanceRadius = 4
-
-        // Calcula a distância de Manhattan do Pac-Man
         val distanceToPacman = calculateManhattanDistance(ghost, pacmanPosition)
 
         // Movimentos possíveis usando BFS para retornar à casa
         val possibleMoves = getPossibleMoves(ghost, walls)
 
-        // Verifica se há algum movimento possível
+        // Se não houver movimentos válidos, o fantasma fica parado
         if (possibleMoves.isEmpty()) {
-            return ghost // Se não houver movimentos válidos, o fantasma fica parado
+            return ghost
         }
 
-        // Função para verificar se Pac-Man está bloqueando o caminho direto
-        fun isPacmanBlockingDirectPath(ghost: Pair<Int, Int>, target: Pair<Int, Int>, pacman: Pair<Int, Int>): Boolean {
-            val distanceToTarget = calculateManhattanDistance(ghost, target)
-            val distanceToPacman = calculateManhattanDistance(ghost, pacman)
-            val pacmanToTargetDistance = calculateManhattanDistance(pacman, target)
+        // Função para calcular a "qualidade" de um movimento baseado na distância de Pac-Man e da casa
+        fun evaluateMove(move: Pair<Int, Int>): Int {
+            val distanceFromPacman = calculateManhattanDistance(move, pacmanPosition)
+            val distanceFromHome = calculateManhattanDistance(move, home)
 
-            // Pac-Man está bloqueando se a soma das distâncias do fantasma até Pac-Man e de Pac-Man até a home for igual à distância direta do fantasma até a home
-            return distanceToPacman + pacmanToTargetDistance <= distanceToTarget + 1
+            // Se Pac-Man estiver bloqueando, queremos priorizar distância de Pac-Man e uma rota alternativa
+            return distanceFromPacman - distanceFromHome
         }
 
-        // Filtrar os movimentos possíveis para evitar Pac-Man se ele estiver bloqueando o caminho
-        val nonBlockingMoves = possibleMoves.filterNot { move ->
-            isPacmanBlockingDirectPath(move, home, pacmanPosition)
-        }
-
-        // Se não houver movimentos não bloqueados, o fantasma deve tentar se afastar de Pac-Man
         return if (isVulnerable && distanceToPacman < avoidanceRadius) {
             // Se Pac-Man estiver muito perto, prioriza se afastar dele e tenta voltar para casa
-            val bestMove = nonBlockingMoves.maxByOrNull { move ->
-                val distanceFromPacman = calculateManhattanDistance(move, pacmanPosition)
-                val distanceFromHome = calculateManhattanDistance(move, home)
-                distanceFromPacman - distanceFromHome // Afasta de Pac-Man, mas tenta ir para casa
-            }
+            val bestMove = possibleMoves.maxByOrNull { evaluateMove(it) }
+            val secondBestMove = possibleMoves.sortedByDescending { evaluateMove(it) }.getOrNull(1)
 
-            // Se não houver movimentos não bloqueados, tenta o melhor movimento disponível
-            bestMove ?: possibleMoves.maxByOrNull { move ->
-                calculateManhattanDistance(move, pacmanPosition)
-            } ?: ghost
+            // Se o melhor movimento for bloqueado, tenta o segundo melhor
+            if (bestMove != null && calculateManhattanDistance(bestMove, pacmanPosition) < avoidanceRadius) {
+                secondBestMove ?: bestMove // Tenta o segundo melhor se Pac-Man estiver bloqueando
+            } else {
+                bestMove ?: ghost // Fica parado se não houver movimento válido
+            }
         } else {
-            // Caso Pac-Man não esteja bloqueando ou fantasma não esteja vulnerável, tenta ir para casa
-            val moveTowardsHome = nonBlockingMoves.minByOrNull { move ->
-                calculateManhattanDistance(move, home)
-            }
-
-            // Se não houver movimentos não bloqueados, tenta o melhor movimento disponível
-            moveTowardsHome ?: moveTowardsTargetBFS(ghost, home, walls)
+            // Se não está vulnerável ou Pac-Man não está bloqueando, segue para casa pelo caminho mais curto
+            moveTowardsTargetBFS(ghost, home, walls)
         }
     }
 
