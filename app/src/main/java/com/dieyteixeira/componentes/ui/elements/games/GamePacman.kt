@@ -715,8 +715,8 @@ fun BoardPacMan(state: PacManState) {
 
 @Composable
 fun ButtonsPacMan(onDirectionChange: (Pair<Int, Int>) -> Unit) {
-    val buttonSize = 64.dp
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+    val buttonSize = 65.dp
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(10.dp)) {
         Box(
             modifier = Modifier
                 .height(buttonSize)

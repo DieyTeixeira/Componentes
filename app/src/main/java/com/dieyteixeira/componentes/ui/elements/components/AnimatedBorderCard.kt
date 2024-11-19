@@ -33,9 +33,8 @@ import androidx.compose.ui.unit.dp
 |------------------------------------------------------------------------------------------------ */
 
 @Composable
-fun AnimatedBorderCard(
-    textCard: String = "",
-) {
+fun AnimatedBorderCard() {
+    val textCard = "Sample Text"
     val shapeExt = 15
     val shapeInt = shapeExt - (shapeExt * getReductionFactor(shapeExt.toFloat()))
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite Color Animation")

@@ -42,6 +42,10 @@ import com.dieyteixeira.componentes.ui.elements.loadings.ThreeBounce
 import com.dieyteixeira.componentes.ui.elements.loadings.ThreeJumping
 import com.dieyteixeira.componentes.ui.elements.loadings.WanderingCubes
 import com.dieyteixeira.componentes.ui.elements.loadings.Wave
+import com.dieyteixeira.componentes.ui.theme.BlueSky
+import com.dieyteixeira.componentes.ui.theme.Green500
+import com.dieyteixeira.componentes.ui.theme.Orange
+import com.dieyteixeira.componentes.ui.theme.Yellow
 
 @Composable
 fun LoadingsScreen() {
@@ -116,10 +120,10 @@ fun LoadingsScreen() {
 
 fun getRandomColorLoadings(): Color {
     val colors = listOf(
-        Color.Blue,
-        Color.Red,
-        Color.Green,
-        Color.Magenta
+        BlueSky,
+        Orange,
+        Green500,
+        Yellow
     )
     return colors.random()
 }

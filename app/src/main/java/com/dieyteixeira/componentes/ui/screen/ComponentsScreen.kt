@@ -1,6 +1,7 @@
 package com.dieyteixeira.componentes.ui.screen
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,10 +34,25 @@ import com.dieyteixeira.componentes.ui.elements.components.AnimatedBorderCard
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedSelectItem
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedStopWatch
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedTopBar
+import com.dieyteixeira.componentes.ui.elements.components.CircularProgressSlider
+import com.dieyteixeira.componentes.ui.elements.components.CurvedScrollView
+import com.dieyteixeira.componentes.ui.elements.components.DarkModeSwitch
+import com.dieyteixeira.componentes.ui.elements.components.DraggableObject
+import com.dieyteixeira.componentes.ui.elements.components.FlipHorizontal
+import com.dieyteixeira.componentes.ui.elements.components.FloatingButtonExpanded
+import com.dieyteixeira.componentes.ui.elements.components.FloatingButtonShowHide
+import com.dieyteixeira.componentes.ui.elements.components.FluidButtom
+import com.dieyteixeira.componentes.ui.elements.components.HeaderList
 import com.dieyteixeira.componentes.ui.elements.components.HorizontalPager
 import com.dieyteixeira.componentes.ui.elements.components.LazyListScrollState
 import com.dieyteixeira.componentes.ui.elements.components.PhotoPicker
+import com.dieyteixeira.componentes.ui.elements.components.SnackBar
+import com.dieyteixeira.componentes.ui.elements.components.SpeedIndicator
 import com.dieyteixeira.componentes.ui.elements.components.WebBrowser
+import com.dieyteixeira.componentes.ui.theme.BlueSky
+import com.dieyteixeira.componentes.ui.theme.Green500
+import com.dieyteixeira.componentes.ui.theme.Orange
+import com.dieyteixeira.componentes.ui.theme.Yellow
 
 @Composable
 fun ComponentsScreen() {
@@ -110,27 +127,39 @@ fun ComponentsScreen() {
 
 fun getRandomColorComponents(): Color {
     val colors = listOf(
-        Color.Blue,
-        Color.Red,
-        Color.Green,
-        Color.Magenta
+        BlueSky,
+        Orange,
+        Green500,
+        Yellow
     )
     return colors.random()
 }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(
+        ExperimentalAnimationApi::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     val screensComponents = listOf<@Composable () -> Unit>(
-        { AnimatedBorderCard(textCard = "Sample Text") },
-        { AnimatedSelectItem(
-            title = "Sample Item",
-            subtitle = "This is a sample subtitle to test the AnimatedSelectItem composable."
-        ) },
+        { AnimatedBorderCard() },
+        { AnimatedSelectItem( color = getRandomColorComponents()) },
         { AnimatedStopWatch() },
         { AnimatedTopBar() },
         { HorizontalPager() },
         { LazyListScrollState() },
         { PhotoPicker() },
-        { WebBrowser(color = getRandomColorComponents()) }
+        { WebBrowser(color = getRandomColorComponents()) },
+        { FluidButtom(color = getRandomColorComponents()) },
+        { DarkModeSwitch() },
+        { SpeedIndicator() },
+        { CircularProgressSlider(colors = getRandomColorComponents()) },
+        { CurvedScrollView() },
+        { DraggableObject() },
+        { FloatingButtonShowHide(color = getRandomColorComponents()) },
+        { SnackBar(color = getRandomColorComponents()) },
+        { FlipHorizontal(color = getRandomColorComponents()) },
+        { HeaderList(color = getRandomColorComponents()) },
+        { FloatingButtonExpanded() }
     )
 
     val textsComponents = listOf(
@@ -141,5 +170,16 @@ fun getRandomColorComponents(): Color {
         "Horizontal Pager",
         "Lazy List Scroll State",
         "Photo Picker",
-        "Web Browser"
+        "Web Browser",
+        "Fluid Buttom",
+        "Dark Mode Switch",
+        "Speed Indicator",
+        "Circular Progress Slider",
+        "Curved ScrollView",
+        "Draggable Object",
+        "Floating Button Show/Hide",
+        "Snack Bar",
+        "Flip Horizontal",
+        "Header List",
+        "Floating Button Expanded"
     )

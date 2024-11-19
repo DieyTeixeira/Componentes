@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,16 +36,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun AnimatedSelectItem(
-    title: String,
-    subtitle: String? = null
+    color: Color
 ) {
+    val title = "Sample Item"
+    val subtitle = "This is a sample subtitle to test the AnimatedSelectItem composable."
     val scaleA = remember { Animatable(initialValue = 1f) }
     val scaleB = remember { Animatable(initialValue = 1f) }
     var selected by remember { mutableStateOf(false) }
 
     val colors =
-        if (selected) MaterialTheme.colors.primary
-        else MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
+        if (selected) color
+        else Color.Gray.copy(alpha = 0.5f)
 
     val clickEnabled = remember { mutableStateOf(true) }
 
@@ -151,7 +153,6 @@ fun AnimatedSelectItem(
 @Composable
 private fun AnimatedSelectItemPreview() {
     AnimatedSelectItem(
-        title = "Sample Item",
-        subtitle = "This is a sample subtitle to test the AnimatedSelectItem composable.",
+        color = Color.Blue
     )
 }

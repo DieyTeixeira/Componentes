@@ -476,8 +476,8 @@ fun BoardTetris(state: TetrisState) {
 
 @Composable
 fun ButtonsTetris(onMove: (Move) -> Unit) {
-    val buttonSize = 64.dp
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+    val buttonSize = 65.dp
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(10.dp)) {
         Row {
             Box(
                 modifier = Modifier
