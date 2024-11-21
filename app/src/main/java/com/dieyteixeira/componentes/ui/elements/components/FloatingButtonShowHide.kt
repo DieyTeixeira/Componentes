@@ -69,16 +69,16 @@ fun FloatingButtonShowHide(color: Color) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Top App Bar",
+                        text = "Top Bar",
                         color = Color.White,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 },
                 backgroundColor = color
             )
         },
-
         content = {
             Box(
                 modifier = Modifier
@@ -103,7 +103,7 @@ fun FloatingButtonShowHide(color: Color) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.apple),
+                                        painter = painterResource(id = R.drawable.cat),
                                         contentDescription = "Item Image",
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier
@@ -115,7 +115,7 @@ fun FloatingButtonShowHide(color: Color) {
 
                                     Column {
                                         Text(
-                                            text = "Apple ${ index++ }",
+                                            text = "Cat ${ index++ }",
                                             color = Color.Black,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold
@@ -136,7 +136,6 @@ fun FloatingButtonShowHide(color: Color) {
                 }
             }
         },
-
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {

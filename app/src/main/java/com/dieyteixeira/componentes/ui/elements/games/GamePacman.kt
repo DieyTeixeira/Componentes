@@ -1,6 +1,7 @@
 package com.dieyteixeira.componentes.ui.elements.games
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -79,6 +80,10 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
 
     private var gameJob: Job? = null
     private var invulnerabilityJob: Job? = null
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("game_preferences", Context.MODE_PRIVATE)
+
+    var highScorePacMan: Int = sharedPreferences.getInt("high_score_pacman", 0)
 
     init {
         startGame()
@@ -97,36 +102,42 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
 
             while (true) {
                 delay(200L)
-                mutableState.update { currentState ->
-                    if (currentState.isGameOver) return@update currentState
+                mutableState.update {
+                    if (it.isGameOver) {
+                        if (it.score > highScorePacMan) {
+                            highScorePacMan = it.score
+                            saveHighScore(highScorePacMan) // Salva o novo recorde
+                        }
+                        return@update it
+                    }
 
                     // Tentar o movimento de Pac-Man
                     val newPacmanPosition = movePacMan(
-                        currentState.pacman,
-                        currentState.walls,
-                        currentState.home,
-                        currentState.entry,
+                        it.pacman,
+                        it.walls,
+                        it.home,
+                        it.entry,
                         move, // Direção desejada
-                        currentState.currentDirection // Direção atual
+                        it.currentDirection // Direção atual
                     )
 
                     // Verifica se Pac-Man comeu comida
-                    val ateFood = currentState.food.contains(newPacmanPosition)
-                    val ateBestFood = currentState.bestFood.contains(newPacmanPosition)
-                    val remainingFood = currentState.food.filter { food -> food != newPacmanPosition }
-                    val remainingBestFood = currentState.bestFood.filter { bestFood -> bestFood != newPacmanPosition }
+                    val ateFood = it.food.contains(newPacmanPosition)
+                    val ateBestFood = it.bestFood.contains(newPacmanPosition)
+                    val remainingFood = it.food.filter { food -> food != newPacmanPosition }
+                    val remainingBestFood = it.bestFood.filter { bestFood -> bestFood != newPacmanPosition }
 
                     // Movimento dos fantasmas
                     val newGhostPositions = moveGhosts(
-                        currentState.ghosts,
+                        it.ghosts,
                         newPacmanPosition,
-                        currentState.walls,
-                        currentState.home,
-                        currentState.ghostVulnerabilities
+                        it.walls,
+                        it.home,
+                        it.ghostVulnerabilities
                     )
 
                     // Verificar colisão com fantasmas
-                    val isCollision = newGhostPositions.contains(newPacmanPosition) && !currentState.isInvulnerable
+                    val isCollision = newGhostPositions.contains(newPacmanPosition) && !it.isInvulnerable
 
                     // Atualizar vulnerabilidade dos fantasmas ao comer "bestFood"
                     val newGhostVulnerabilities = if (ateBestFood) {
@@ -134,19 +145,19 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
                         listOf(true, true, true, true)
                     } else {
                         // Mantém o estado atual da vulnerabilidade dos fantasmas
-                        currentState.ghostVulnerabilities
+                        it.ghostVulnerabilities
                     }
 
                     // Atualizar vulnerabilidade dos fantasmas ao comer "bestFood"
-                    val newState = currentState.copy(
-                        pacman = if (isCollision) currentState.pacman else newPacmanPosition,
+                    val newState = it.copy(
+                        pacman = if (isCollision) it.pacman else newPacmanPosition,
                         food = remainingFood,
                         bestFood = remainingBestFood,
                         ghosts = newGhostPositions,
-                        score = if (ateFood) currentState.score + 5 else if (ateBestFood) currentState.score + 10 else currentState.score,
+                        score = if (ateFood) it.score + 5 else if (ateBestFood) it.score + 10 else it.score,
                         isGameOver = isCollision || (remainingFood.isEmpty() && remainingBestFood.isEmpty()),
                         ghostVulnerabilities = newGhostVulnerabilities,
-                        currentDirection = if (newPacmanPosition != currentState.pacman) move else currentState.currentDirection // Atualizar a direção atual somente se o movimento foi bem-sucedido
+                        currentDirection = if (newPacmanPosition != it.pacman) move else it.currentDirection // Atualizar a direção atual somente se o movimento foi bem-sucedido
                     )
 
                     // Se os fantasmas ficam vulneráveis ao comer "bestFood"
@@ -155,7 +166,7 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
                             delay(5000L) // Fantasmas vulneráveis por 5 segundos
                             mutableState.update { state ->
                                 state.copy(ghostVulnerabilities = state.ghostVulnerabilities.mapIndexed { index, isVulnerable ->
-                                    if (isVulnerable && currentState.ghosts[index] == currentState.home[index]) {
+                                    if (isVulnerable && it.ghosts[index] == it.home[index]) {
                                         false // O fantasma volta ao normal ao chegar em casa
                                     } else {
                                         isVulnerable
@@ -431,6 +442,10 @@ class PacManGame(private val scope: CoroutineScope, context: Context) {
         startGame()
     }
 
+    private fun saveHighScore(score: Int) {
+        sharedPreferences.edit().putInt("high_score_pacman", score).apply()
+    }
+
     companion object {
         const val BOARD_SIZE = 24
 
@@ -524,8 +539,23 @@ fun GamePacMan() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         state.value?.let {
             if (it.isGameOver) {
-                GameOverPacMan(score = it.score) {
+                GameOverPacMan(score = it.score, highScore = game.highScorePacMan) {
                     game.reset()
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp)
+                        .background(LightGreen),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "",
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontSize = 20.sp
+                        ),
+                        color = DarkGreen
+                    )
                 }
             } else {
                 BoardPacMan(it)
@@ -536,13 +566,19 @@ fun GamePacMan() {
                         .background(LightGreen),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "score: ${it.score}",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontSize = 20.sp
-                        ),
-                        color = DarkGreen
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text(
+                            text = "score: ${it.score}",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontSize = 20.sp
+                            ),
+                            color = DarkGreen
+                        )
+                    }
                 }
             }
         }
@@ -553,23 +589,65 @@ fun GamePacMan() {
 }
 
 @Composable
-fun GameOverPacMan(score: Int, onRestart: () -> Unit) {
-    Box(
+fun GameOverPacMan(score: Int, highScore: Int, onRestart: () -> Unit) {
+    BoxWithConstraints(
         Modifier
-            .fillMaxSize()
-            .background(LightGreen),
-        contentAlignment = Alignment.Center
+            .background(LightGreen)
+            .padding(16.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Game Over", fontSize = 32.sp, color = DarkGreen)
-            Text("Final Score: $score", fontSize = 24.sp, color = DarkGreen)
-            Box(
+
+        Box(
+            Modifier
+                .size(maxWidth)
+                .border(2.dp, DarkGreen)
+        ) {
+            Column(
                 modifier = Modifier
-                    .background(DarkGreen, RoundedCornerShape(10.dp))
-                    .clickable { onRestart() },
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .background(LightGreen),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Restart", fontSize = 24.sp, color = LightGreen, modifier = Modifier.padding(10.dp))
+                Spacer(modifier = Modifier.height(40.dp))
+                Text(
+                    text = "game over",
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp),
+                    color = DarkGreen
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "final score: $score",
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 24.sp),
+                    color = DarkGreen
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "high score: $highScore",
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 24.sp),
+                    color = DarkGreen
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Box(
+                    modifier = Modifier
+                        .background(DarkGreen, RoundedCornerShape(10.dp))
+                        .clickable {
+                            onRestart()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Restart",
+                        style = MaterialTheme.typography.displayMedium.copy(fontSize = 24.sp),
+                        color = LightGreen,
+                        modifier = Modifier.padding(15.dp, 5.dp, 15.dp, 2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(70.dp))
+                Text(
+                    text = "criado por Diey Teixeira",
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 20.sp),
+                    color = DarkGreen
+                )
             }
         }
     }

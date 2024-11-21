@@ -79,7 +79,7 @@ class TetrisGame(private val scope: CoroutineScope, context: Context) {
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("game_preferences", Context.MODE_PRIVATE)
 
-    var highScore: Int = sharedPreferences.getInt("high_score_tetris", 0)
+    var highScoreTetris: Int = sharedPreferences.getInt("high_score_tetris", 0)
 
     init {
         startGame()
@@ -93,9 +93,9 @@ class TetrisGame(private val scope: CoroutineScope, context: Context) {
                 delay(speed)
                 mutableState.update {
                     if (it.isGameOver) {
-                        if (it.score > highScore) {
-                            highScore = it.score
-                            saveHighScore(highScore)
+                        if (it.score > highScoreTetris) {
+                            highScoreTetris = it.score
+                            saveHighScore(highScoreTetris)
                         }
                         return@update it
                     }
@@ -277,7 +277,7 @@ fun GameTetris() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         state.value?.let {
             if (it.isGameOver) {
-                GameOverTetris(score = it.score, highScore = game.highScore) {
+                GameOverTetris(score = it.score, highScore = game.highScoreTetris) {
                     game.reset()
                 }
 

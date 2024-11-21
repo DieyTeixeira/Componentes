@@ -197,7 +197,7 @@ fun GameSnake() {
                             color = DarkGreen
                         )
                         Text(
-                            text = "velocidade: ${it.speed}",
+                            text = "vel: ${it.speed}",
                             style = MaterialTheme.typography.displayMedium.copy(
                                 fontSize = 20.sp
                             ),

@@ -34,6 +34,8 @@ import com.dieyteixeira.componentes.ui.elements.components.AnimatedBorderCard
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedSelectItem
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedStopWatch
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedTopBar
+import com.dieyteixeira.componentes.ui.elements.components.AnimationExpandList
+import com.dieyteixeira.componentes.ui.elements.components.BottomBar
 import com.dieyteixeira.componentes.ui.elements.components.CircularProgressSlider
 import com.dieyteixeira.componentes.ui.elements.components.CurvedScrollView
 import com.dieyteixeira.componentes.ui.elements.components.DarkModeSwitch
@@ -45,9 +47,12 @@ import com.dieyteixeira.componentes.ui.elements.components.FluidButtom
 import com.dieyteixeira.componentes.ui.elements.components.HeaderList
 import com.dieyteixeira.componentes.ui.elements.components.HorizontalPager
 import com.dieyteixeira.componentes.ui.elements.components.LazyListScrollState
+import com.dieyteixeira.componentes.ui.elements.components.ListDragDrop
 import com.dieyteixeira.componentes.ui.elements.components.PhotoPicker
 import com.dieyteixeira.componentes.ui.elements.components.SnackBar
 import com.dieyteixeira.componentes.ui.elements.components.SpeedIndicator
+import com.dieyteixeira.componentes.ui.elements.components.StaggeredGrid
+import com.dieyteixeira.componentes.ui.elements.components.SwipeToDelete
 import com.dieyteixeira.componentes.ui.elements.components.WebBrowser
 import com.dieyteixeira.componentes.ui.theme.BlueSky
 import com.dieyteixeira.componentes.ui.theme.Green500
@@ -142,7 +147,7 @@ fun getRandomColorComponents(): Color {
     )
     val screensComponents = listOf<@Composable () -> Unit>(
         { AnimatedBorderCard() },
-        { AnimatedSelectItem( color = getRandomColorComponents()) },
+        { AnimatedSelectItem(color = getRandomColorComponents()) },
         { AnimatedStopWatch() },
         { AnimatedTopBar() },
         { HorizontalPager() },
@@ -156,10 +161,15 @@ fun getRandomColorComponents(): Color {
         { CurvedScrollView() },
         { DraggableObject() },
         { FloatingButtonShowHide(color = getRandomColorComponents()) },
+        { BottomBar(color = getRandomColorComponents()) },
         { SnackBar(color = getRandomColorComponents()) },
         { FlipHorizontal(color = getRandomColorComponents()) },
         { HeaderList(color = getRandomColorComponents()) },
-        { FloatingButtonExpanded() }
+        { FloatingButtonExpanded() },
+        { ListDragDrop(color = getRandomColorComponents()) },
+        { StaggeredGrid(color = getRandomColorComponents()) },
+        { SwipeToDelete(color = getRandomColorComponents()) },
+        { AnimationExpandList() }
     )
 
     val textsComponents = listOf(
@@ -178,8 +188,13 @@ fun getRandomColorComponents(): Color {
         "Curved ScrollView",
         "Draggable Object",
         "Floating Button Show/Hide",
+        "Bottom Bar",
         "Snack Bar",
         "Flip Horizontal",
         "Header List",
-        "Floating Button Expanded"
+        "Floating Button Expanded",
+        "List Drag Drop",
+        "Staggered Grid",
+        "Swipe To Delete",
+        "Animation Expand List"
     )
