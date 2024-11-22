@@ -21,6 +21,7 @@ richeditorCompose = "1.0.0-beta03"
 accompanistWebView = "0.29.1-alpha"
 ui = "1.7.5"
 navigationRuntimeKtx = "2.8.4"
+runtimeLivedata = "1.7.5"
 
 [libraries]
 accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanistNavigationAnimation" }
@@ -52,6 +53,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-material = { group = "androidx.compose.material", name = "material" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

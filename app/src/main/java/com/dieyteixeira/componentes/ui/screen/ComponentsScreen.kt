@@ -1,5 +1,6 @@
 package com.dieyteixeira.componentes.ui.screen
 
+import android.media.MediaPlayer
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +33,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.dieyteixeira.componentes.R
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedBorderCard
+import com.dieyteixeira.componentes.ui.elements.components.AnimatedDrawerNavigation
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedSelectItem
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedStopWatch
 import com.dieyteixeira.componentes.ui.elements.components.AnimatedTopBar
 import com.dieyteixeira.componentes.ui.elements.components.AnimationExpandList
+import com.dieyteixeira.componentes.ui.elements.components.AudioPlayer
 import com.dieyteixeira.componentes.ui.elements.components.BottomBar
 import com.dieyteixeira.componentes.ui.elements.components.CircularProgressSlider
 import com.dieyteixeira.componentes.ui.elements.components.CurvedScrollView
@@ -48,11 +52,13 @@ import com.dieyteixeira.componentes.ui.elements.components.HeaderList
 import com.dieyteixeira.componentes.ui.elements.components.HorizontalPager
 import com.dieyteixeira.componentes.ui.elements.components.LazyListScrollState
 import com.dieyteixeira.componentes.ui.elements.components.ListDragDrop
+import com.dieyteixeira.componentes.ui.elements.components.ObserveConnectivity
 import com.dieyteixeira.componentes.ui.elements.components.PhotoPicker
 import com.dieyteixeira.componentes.ui.elements.components.SnackBar
 import com.dieyteixeira.componentes.ui.elements.components.SpeedIndicator
 import com.dieyteixeira.componentes.ui.elements.components.StaggeredGrid
 import com.dieyteixeira.componentes.ui.elements.components.SwipeToDelete
+import com.dieyteixeira.componentes.ui.elements.components.TextExpandable
 import com.dieyteixeira.componentes.ui.elements.components.WebBrowser
 import com.dieyteixeira.componentes.ui.theme.BlueSky
 import com.dieyteixeira.componentes.ui.theme.Green500
@@ -169,7 +175,11 @@ fun getRandomColorComponents(): Color {
         { ListDragDrop(color = getRandomColorComponents()) },
         { StaggeredGrid(color = getRandomColorComponents()) },
         { SwipeToDelete(color = getRandomColorComponents()) },
-        { AnimationExpandList() }
+        { AnimationExpandList() },
+        { AnimatedDrawerNavigation(color = getRandomColorComponents()) },
+        { ObserveConnectivity(color = getRandomColorComponents()) },
+        { TextExpandable() },
+        { AudioPlayer(color = getRandomColorComponents()) }
     )
 
     val textsComponents = listOf(
@@ -196,5 +206,9 @@ fun getRandomColorComponents(): Color {
         "List Drag Drop",
         "Staggered Grid",
         "Swipe To Delete",
-        "Animation Expand List"
+        "Animation Expand List",
+        "Animated Drawer Navigation",
+        "Observe Connectivity",
+        "Text Expandable",
+        "Audio Player"
     )

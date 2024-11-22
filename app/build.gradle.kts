@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.accompanist.navigation.animation)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
