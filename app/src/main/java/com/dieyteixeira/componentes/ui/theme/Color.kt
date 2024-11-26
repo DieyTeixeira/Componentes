@@ -19,8 +19,8 @@ val BlueSky= Color(0xFF4478a9)
 val NightSky =  Color(0xFF333333)
 val BorderColor = Color(0x40000000)
 
-val green = Color(0xFF6FCF97)
-val red = Color(0xFFEB5757)
+val Green = Color(0xFF6FCF97)
+val Red = Color(0xFFEB5757)
 
 val LightGreen = Color(0xFF8DA25A)
 val DarkGreen = Color(0xFF2D321D)

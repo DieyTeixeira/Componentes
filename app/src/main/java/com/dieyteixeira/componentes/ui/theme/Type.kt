@@ -20,6 +20,10 @@ val Typography = Typography(
     displayMedium = TextStyle(
         fontFamily = FontFamily(Font(R.font.font_digital_3)),
         letterSpacing = 1.2.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = FontFamily(Font(R.font.font_adventure)),
+        letterSpacing = 1.2.sp
     )
     /* Other default text styles to override
     titleLarge = TextStyle(

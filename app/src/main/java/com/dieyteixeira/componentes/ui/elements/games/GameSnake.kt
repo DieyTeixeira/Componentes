@@ -1,5 +1,6 @@
 package com.dieyteixeira.componentes.ui.elements.games
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.foundation.background
@@ -213,6 +214,7 @@ fun GameSnake() {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun GameOverSnake(score: Int, highScore: Int, onRestart: () -> Unit) {
     BoxWithConstraints(
@@ -278,6 +280,7 @@ fun GameOverSnake(score: Int, highScore: Int, onRestart: () -> Unit) {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BoardSnake(state: State) {
     BoxWithConstraints(

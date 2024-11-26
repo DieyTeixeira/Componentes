@@ -28,10 +28,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.dieyteixeira.componentes.R
+import com.dieyteixeira.componentes.ui.elements.games.EscapeScreen
+import com.dieyteixeira.componentes.ui.elements.games.GameMemory
 import com.dieyteixeira.componentes.ui.elements.games.GamePacMan
 import com.dieyteixeira.componentes.ui.elements.games.GameSnake
 import com.dieyteixeira.componentes.ui.elements.games.GameTetris
 import com.dieyteixeira.componentes.ui.elements.games.GameVelha
+import com.dieyteixeira.componentes.ui.elements.games.MemoryGame
 
 @Composable
 fun GamesScreen() {
@@ -119,12 +122,16 @@ fun getRandomColorGames(): Color {
         { GameSnake() },
         { GameVelha() },
         { GameTetris() },
-        { GamePacMan() }
+        { GamePacMan() },
+        { EscapeScreen() },
+        { GameMemory() }
     )
 
     val textsGames = listOf(
         "Game Snake",
         "Game Velha",
         "Game Tetris",
-        "Game PacMan"
+        "Game PacMan",
+        "Escape Game",
+        "Game Memory"
     )

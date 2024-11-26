@@ -6,12 +6,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,13 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dieyteixeira.componentes.ui.theme.green
-import com.dieyteixeira.componentes.ui.theme.red
+import com.dieyteixeira.componentes.ui.theme.Green
+import com.dieyteixeira.componentes.ui.theme.Red
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -100,7 +95,7 @@ fun ObserveConnectivity(color: Color) {
 fun ConnectivityStatusBox(
     isConnected: Boolean
 ) {
-    val backgroundColor by animateColorAsState(targetValue = if (isConnected) green else red)
+    val backgroundColor by animateColorAsState(targetValue = if (isConnected) Green else Red)
     val message = if (isConnected) "Conectado!" else "Sem sinal!"
     val iconResource = if (isConnected) {
         Icons.Default.Wifi
