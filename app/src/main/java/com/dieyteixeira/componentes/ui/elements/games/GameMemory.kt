@@ -1,7 +1,5 @@
 package com.dieyteixeira.componentes.ui.elements.games
 
-import android.graphics.fonts.Font
-import android.graphics.fonts.FontFamily
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -10,18 +8,34 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -29,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -38,16 +53,33 @@ import com.dieyteixeira.componentes.ui.theme.BlueSky
 import com.dieyteixeira.componentes.ui.theme.Green
 import com.dieyteixeira.componentes.ui.theme.Green500
 import com.dieyteixeira.componentes.ui.theme.Red
+import com.dieyteixeira.componentes.ui.theme.Yellow
 import kotlinx.coroutines.delay
 
 @Composable
-fun GameMemory() {
-    var gridSize by remember { mutableStateOf(GridSize(5, 4)) }
+fun GameMemory(color: Color) {
+    var gridSize by remember { mutableStateOf(GridSize(4, 3)) }
     var gameMode by remember { mutableStateOf(GameMode.OnePlayer) }
+    var player1Name by remember { mutableStateOf("") }
+    var player2Name by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(true) }
 
     val onStartGame: (GameConfig) -> Unit = { config ->
         showDialog = false
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color)
+            .padding(15.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "JoGo DA MEMóRIA",
+            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp),
+            color = if (color == Yellow) Color.Black else Color.White
+        )
     }
 
     Column(
@@ -57,32 +89,41 @@ fun GameMemory() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            "JOGO DA MEMÓRIA",
-            style = MaterialTheme.typography.displaySmall.copy(fontSize = 30.sp),
-            color = Color.Black
-        )
-
         if (showDialog) {
             GameSettingsDialog(
+                color = color,
                 gridSize = gridSize,
                 gameMode = gameMode,
                 onGridSizeSelected = { selectedSize -> gridSize = selectedSize },
                 onGameModeSelected = { selectedMode -> gameMode = selectedMode },
+                player1Name = player1Name,
+                player2Name = player2Name,
+                onPlayer1NameChange = { player1Name = it },
+                onPlayer2NameChange = { player2Name = it },
                 onStartGame = onStartGame
             )
         } else {
-            MemoryGame(config = GameConfig(gridSize, gameMode), isTwoPlayers = gameMode == GameMode.TwoPlayers)
+            MemoryGame(
+                config = GameConfig(gridSize, gameMode),
+                isTwoPlayers = gameMode == GameMode.TwoPlayers,
+                player1Name = player1Name,
+                player2Name = player2Name
+            )
         }
     }
 }
 
 @Composable
 fun GameSettingsDialog(
+    color: Color,
     gridSize: GridSize,
     gameMode: GameMode,
     onGridSizeSelected: (GridSize) -> Unit,
     onGameModeSelected: (GameMode) -> Unit,
+    player1Name: String,
+    player2Name: String,
+    onPlayer1NameChange: (String) -> Unit,
+    onPlayer2NameChange: (String) -> Unit,
     onStartGame: (GameConfig) -> Unit
 ) {
 
@@ -90,34 +131,30 @@ fun GameSettingsDialog(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         Text(
-            "Configurações do Jogo",
-            style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp)
+            "CoNFIGuRAçõES Do JoGo",
+            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 20.sp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            "Tamanho do jogo:",
-            style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp)
+        GameModeSelector(
+            selectedMode = gameMode,
+            onModeSelected = onGameModeSelected,
+            player1Name = player1Name,
+            player2Name = player2Name,
+            onPlayer1NameChange = onPlayer1NameChange,
+            onPlayer2NameChange = onPlayer2NameChange
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        GridSizeSelector(selectedSize = gridSize, onSizeSelected = onGridSizeSelected)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            "Modo de jogo:",
-            style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp)
+        GridSizeSelector(
+            selectedSize = gridSize,
+            onSizeSelected = onGridSizeSelected
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        GameModeSelector(selectedMode = gameMode, onModeSelected = onGameModeSelected)
 
         Spacer(modifier = Modifier.height(25.dp))
 
@@ -125,25 +162,35 @@ fun GameSettingsDialog(
             modifier = Modifier
                 .width(100.dp)
                 .height(35.dp)
-                .background(Green500, shape = RoundedCornerShape(100))
+                .background(color, shape = RoundedCornerShape(100))
                 .clickable { onStartGame(GameConfig(gridSize, gameMode)) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 "Iniciar Jogo",
                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 14.sp),
-                color = Color.White
+                color = if (color == Yellow) Color.Black else Color.White
             )
         }
     }
 }
 
 @Composable
-fun GridSizeSelector(selectedSize: GridSize, onSizeSelected: (GridSize) -> Unit) {
+fun GridSizeSelector(
+    selectedSize: GridSize,
+    onSizeSelected: (GridSize) -> Unit
+) {
     val sizes = listOf(
-        GridSize(5, 4), GridSize(6, 4), GridSize(6, 5),
-        GridSize(6, 6), GridSize(7, 6)
+        GridSize(4, 3), GridSize(4, 4), GridSize(5, 4), GridSize(6, 4),
+        GridSize(6, 5), GridSize(6, 6), GridSize(7, 6), GridSize(8, 6)
     )
+
+    Text(
+        "Tamanho do jogo:",
+        style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp)
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -152,17 +199,22 @@ fun GridSizeSelector(selectedSize: GridSize, onSizeSelected: (GridSize) -> Unit)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            sizes.take(3).forEach { size ->
+            sizes.take(4).forEach { size ->
+                val grid = if (size.columns < 4) {
+                    "Grid ${size.columns}x${size.rows}"
+                } else {
+                    "Grid ${size.rows}x${size.columns}"
+                }
                 Box(
                     modifier = Modifier
                         .width(130.dp)
                         .height(30.dp)
-                        .background(if (size == selectedSize) BlueSky else Color.LightGray, shape = RoundedCornerShape(10.dp))
+                        .background(if (size == selectedSize) Color.DarkGray else Color.LightGray, shape = RoundedCornerShape(10.dp))
                         .clickable{ onSizeSelected(size) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Grid ${size.columns}x${size.rows}",
+                        text = grid,
                         style = MaterialTheme.typography.displaySmall.copy(fontSize = 16.sp),
                         color = if (size == selectedSize) Color.White else Color.Black
                     )
@@ -173,17 +225,22 @@ fun GridSizeSelector(selectedSize: GridSize, onSizeSelected: (GridSize) -> Unit)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            sizes.drop(3).forEach { size ->
+            sizes.drop(4).forEach { size ->
+                val grid = if (size.columns < 6) {
+                    "Grid ${size.columns}x${size.rows}"
+                } else {
+                    "Grid ${size.rows}x${size.columns}"
+                }
                 Box(
                     modifier = Modifier
                         .width(130.dp)
                         .height(30.dp)
-                        .background(if (size == selectedSize) BlueSky else Color.LightGray, shape = RoundedCornerShape(10.dp))
+                        .background(if (size == selectedSize) Color.DarkGray else Color.LightGray, shape = RoundedCornerShape(10.dp))
                         .clickable{ onSizeSelected(size) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Grid ${size.columns}x${size.rows}",
+                        text = grid,
                         style = MaterialTheme.typography.displaySmall.copy(fontSize = 16.sp),
                         color = if (size == selectedSize) Color.White else Color.Black
                     )
@@ -195,7 +252,21 @@ fun GridSizeSelector(selectedSize: GridSize, onSizeSelected: (GridSize) -> Unit)
 }
 
 @Composable
-fun GameModeSelector(selectedMode: GameMode, onModeSelected: (GameMode) -> Unit) {
+fun GameModeSelector(
+    selectedMode: GameMode,
+    onModeSelected: (GameMode) -> Unit,
+    player1Name: String,
+    player2Name: String,
+    onPlayer1NameChange: (String) -> Unit,
+    onPlayer2NameChange: (String) -> Unit
+) {
+    Text(
+        "Modo de jogo:",
+        style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp)
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -206,7 +277,7 @@ fun GameModeSelector(selectedMode: GameMode, onModeSelected: (GameMode) -> Unit)
                 modifier = Modifier
                     .width(130.dp)
                     .height(30.dp)
-                    .background(if (mode == selectedMode) BlueSky else Color.LightGray, shape = RoundedCornerShape(10.dp))
+                    .background(if (mode == selectedMode) Color.DarkGray else Color.LightGray, shape = RoundedCornerShape(10.dp))
                     .clickable{onModeSelected(mode)},
                 contentAlignment = Alignment.Center
             ) {
@@ -215,6 +286,73 @@ fun GameModeSelector(selectedMode: GameMode, onModeSelected: (GameMode) -> Unit)
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 16.sp),
                     color = if (mode == selectedMode) Color.White else Color.Black
                 )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(5.dp))
+
+    if (selectedMode == GameMode.TwoPlayers) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Jogador 1  ",
+                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
+                    modifier = Modifier.padding(bottom = 5.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .height(34.dp)
+                        .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp)
+                        .fillMaxWidth()
+                ) {
+                    BasicTextField(
+                        value = player1Name,
+                        onValueChange = { newValue -> onPlayer1NameChange(newValue) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = Color.Black,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Jogador 2  ",
+                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
+                    modifier = Modifier.padding(bottom = 5.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .height(34.dp)
+                        .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp)
+                        .fillMaxWidth()
+                ) {
+                    BasicTextField(
+                        value = player2Name,
+                        onValueChange = { newValue -> onPlayer2NameChange(newValue) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = Color.Black,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }
@@ -235,16 +373,22 @@ data class MemoryGameState(
     val matched: MutableList<Boolean>,
     var firstChoice: Int?,
     var secondChoice: Int?,
-    var movesPlayer1: Int,
-    var movesPlayer2: Int,
+    var movesPlayer: Int,
     var currentPlayer: Int,
+    val player1Name: String,
+    val player2Name: String,
     val rows: Int,
     val columns: Int,
     val matchedPairs: MutableMap<Int, Int>
 )
 
 @Composable
-fun MemoryGame(config: GameConfig, isTwoPlayers: Boolean) {
+fun MemoryGame(
+    config: GameConfig,
+    isTwoPlayers: Boolean,
+    player1Name: String,
+    player2Name: String
+) {
     var gameState by remember {
         mutableStateOf(
             MemoryGameState(
@@ -253,9 +397,10 @@ fun MemoryGame(config: GameConfig, isTwoPlayers: Boolean) {
                 matched = MutableList(config.gridSize.rows * config.gridSize.columns) { false },
                 firstChoice = null,
                 secondChoice = null,
-                movesPlayer1 = 0,
-                movesPlayer2 = 0,
+                movesPlayer = 0,
                 currentPlayer = 1,
+                player1Name = player1Name,
+                player2Name = player2Name,
                 rows = config.gridSize.rows,
                 columns = config.gridSize.columns,
                 matchedPairs = mutableMapOf()
@@ -303,16 +448,14 @@ fun MemoryGame(config: GameConfig, isTwoPlayers: Boolean) {
             gameState = gameState.copy(firstChoice = null, secondChoice = null)
 
             if (gameState.currentPlayer == 1) {
-                gameState = gameState.copy(movesPlayer1 = gameState.movesPlayer1 + 1)
-            } else {
-                gameState = gameState.copy(movesPlayer2 = gameState.movesPlayer2 + 1)
+                gameState = gameState.copy(movesPlayer = gameState.movesPlayer + 1)
             }
 
             if (isTwoPlayers) {
                 gameState = gameState.copy(currentPlayer = if (gameState.currentPlayer == 1) 2 else 1)
+            } else {
+                gameState = gameState.copy(currentPlayer = 3)
             }
-
-//            gameState = gameState.copy(currentPlayer = if (gameState.currentPlayer == 1) 2 else 1)
         }
     }
 
@@ -323,14 +466,68 @@ fun MemoryGame(config: GameConfig, isTwoPlayers: Boolean) {
         verticalArrangement = Arrangement.Center
     ) {
         if (isTwoPlayers) {
-            Text(
-                text = "Jogador da vez: ${gameState.currentPlayer}",
-                style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
-                color = Color.Black
-            )
+            Row(
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(40.dp)
+                        .border(
+                            color = if (gameState.currentPlayer == 1) BlueSky else Color.Transparent,
+                            width = 2.dp,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = player1Name,
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .background(
+                                BlueSky,
+                                shape = RoundedCornerShape(3.dp)
+                            )
+                    ) {}
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+                Row(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(40.dp)
+                        .border(
+                            color = if (gameState.currentPlayer == 2) Red else Color.Transparent,
+                            width = 2.dp,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = player2Name,
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .background(
+                                Red,
+                                shape = RoundedCornerShape(3.dp)
+                            )
+                    ) {}
+                }
+            }
         } else {
             Text(
-                text = "Movimentos: ${gameState.movesPlayer1}",
+                text = "Movimentos: ${gameState.movesPlayer}",
                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
                 color = Color.Black
             )
@@ -384,6 +581,10 @@ fun GridBoard(
     onItemClick: (Int) -> Unit
 ) {
 
+    val fontSize = with(LocalDensity.current) {
+        (cardSize.toPx() * 0.75f).toSp()
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -425,8 +626,9 @@ fun GridBoard(
                                     .background(
                                         if (showExplosion) {
                                             when (gameState.matchedPairs[index]) {
-                                                1 -> Red
-                                                2 -> BlueSky
+                                                1 -> BlueSky
+                                                2 -> Red
+                                                3 -> Green500
                                                 else -> Green
                                             }
                                         } else Color.LightGray
@@ -435,7 +637,7 @@ fun GridBoard(
                             ) {
                                 Text(
                                     text = gameState.grid[index].toString(),
-                                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 30.sp),
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = fontSize),
                                     color = if (gameState.matched[index]) Color.White else Color.Black
                                 )
                             }
@@ -524,8 +726,9 @@ fun FlipRotate(
 @Composable
 fun SparksEffect(modifier: Modifier, matchPlayer: Int) {
     val explosionColor = when (matchPlayer) {
-        1 -> Red
-        2 -> BlueSky
+        1 -> BlueSky
+        2 -> Red
+        3 -> Green500
         else -> Green
     }
 

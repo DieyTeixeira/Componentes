@@ -4,41 +4,29 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.dieyteixeira.componentes.R
 
-// Set of Material typography styles to start with
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
+
+    // textos gerais jogos, fonte digital
     displayMedium = TextStyle(
-        fontFamily = FontFamily(Font(R.font.font_digital_3)),
+        fontFamily = FontFamily(Font(R.font.font_digital)),
         letterSpacing = 1.2.sp
     ),
+
+    // cabeçalhos memória
+    headlineLarge = TextStyle(
+        fontFamily = FontFamily(Font(R.font.font_memory1))
+    ),
+    // textos gerais memória
     displaySmall = TextStyle(
-        fontFamily = FontFamily(Font(R.font.font_adventure)),
+        fontFamily = FontFamily(Font(R.font.font_memory2)),
         letterSpacing = 1.2.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+    // números dos cards
+    titleLarge = TextStyle(
+        fontFamily = FontFamily(Font(R.font.font_memory3))
     )
-    */
+
 )
