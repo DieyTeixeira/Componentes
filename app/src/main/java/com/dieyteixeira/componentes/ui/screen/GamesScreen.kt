@@ -29,12 +29,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.dieyteixeira.componentes.R
 import com.dieyteixeira.componentes.ui.elements.games.EscapeScreen
-import com.dieyteixeira.componentes.ui.elements.games.GameMemory
+import com.dieyteixeira.componentes.ui.elements.games.game_memory.GameMemory
 import com.dieyteixeira.componentes.ui.elements.games.GamePacMan
 import com.dieyteixeira.componentes.ui.elements.games.GameSnake
 import com.dieyteixeira.componentes.ui.elements.games.GameTetris
 import com.dieyteixeira.componentes.ui.elements.games.GameVelha
-import com.dieyteixeira.componentes.ui.elements.games.MemoryGame
 import com.dieyteixeira.componentes.ui.theme.BlueSky
 import com.dieyteixeira.componentes.ui.theme.Green500
 import com.dieyteixeira.componentes.ui.theme.Orange
