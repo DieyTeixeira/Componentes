@@ -201,6 +201,8 @@ fun MemoryGame(
                     matchedPairs = mutableMapOf()
                 )
 
+                GameMode.OnePlayer
+
                 gridSizeAtual = nextGridSize
                 levelAtual = level
 
@@ -311,6 +313,7 @@ fun MemoryGame(
             val player1Score = countPairsByPlayer(gameState.matchedPairs, 1)
             val player2Score = countPairsByPlayer(gameState.matchedPairs, 2)
 
+            delay(1000)
             if (isTwoPlayers) {
                 if (player1Score > player2Score) {
                     winnerName = gameState.player1Name
@@ -569,12 +572,28 @@ fun MemoryGame(
                             .height(20.dp)
                             .padding(3.dp)
                     )
-                    Text(
-                        text = "$levelAtual",
-                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp),
-                        color = Color.White,
-                        modifier = Modifier.height(40.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .height(40.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = "$levelAtual",
+                                style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp),
+                                color = Color.White
+                            )
+                            Text(
+                                text = "/8",
+                                style = MaterialTheme.typography.displaySmall.copy(fontSize = 15.sp),
+                                color = Color.White,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.width(5.dp))
                 Column(
@@ -690,21 +709,31 @@ fun MemoryGame(
 
         val cardSize = calculateCardSize(gameState.rows, gameState.columns)
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            GridBoard(gameState, cardSize) { index ->
-                if (!gameState.revealed[index] && !gameState.matched[index] && !isWaitingForFlip) {
-                    val newRevealed = gameState.revealed.toMutableList()
-                    newRevealed[index] = true
+        if (showEndOneGameDialog || showEndTwoGameDialog) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {}
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                GridBoard(gameState, cardSize) { index ->
+                    if (!gameState.revealed[index] && !gameState.matched[index] && !isWaitingForFlip) {
+                        val newRevealed = gameState.revealed.toMutableList()
+                        newRevealed[index] = true
 
-                    if (gameState.firstChoice == null) {
-                        gameState = gameState.copy(firstChoice = index, revealed = newRevealed)
-                    } else {
-                        gameState = gameState.copy(secondChoice = index, revealed = newRevealed)
+                        if (gameState.firstChoice == null) {
+                            gameState = gameState.copy(firstChoice = index, revealed = newRevealed)
+                        } else {
+                            gameState = gameState.copy(secondChoice = index, revealed = newRevealed)
+                        }
                     }
                 }
             }
