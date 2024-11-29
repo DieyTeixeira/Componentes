@@ -48,6 +48,8 @@ val DarkGreen19 = Color(0xFF2D321D)
 val Green200 = Color(0xFFAEFF82)
 val Green300 = Color(0xFFC9FCAD)
 val Green500 = Color(0xFF07A312)
+val Green700 = Color(0xFF06790E)
+val Green800 = Color(0xFF06690E)
 
 val DarkColor = Color(0xFF101522)
 val DarkColor2 = Color(0xFF202532)

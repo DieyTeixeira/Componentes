@@ -1,5 +1,6 @@
 package com.dieyteixeira.componentes.ui.elements.games.game_memory
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,19 +37,23 @@ fun EndOneGameDialog(
     winnerName: String,
     gridSize: GridSize,
     onDismiss: () -> Unit,
+    onNewGame: () -> Unit,
     onNextLevel: () -> Unit
 ) {
     var message by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         if (gridSize.rows == 8) {
-            onDismiss()
-        } else {
-            message = "Parabéns, $winnerName!\nNível concluído!"
+            message = "Parabéns $winnerName, você venceu!"
             delay(3000)
+            onNewGame()
+        } else {
+            message = "Parabéns $winnerName!\nNível concluído!"
+            delay(2000)
+            onNextLevel()
             message = "Iniciando\npróximo nível..."
             delay(3000)
-            onNextLevel()
+            onDismiss()
         }
     }
 
@@ -62,24 +67,78 @@ fun EndOneGameDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (gridSize.rows == 8) {
-                    Text(
-                        text = "Parabéns, você venceu!",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            color = Green500,
-                            fontSize = 20.sp
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            color = Color.DarkGray,
-                            fontSize = 20.sp
-                        ),
-                        textAlign = TextAlign.Center
-                    )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        color = if (gridSize.rows == 8) Green500 else Color.DarkGray,
+                        fontSize = 20.sp
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun ShowClearRecordDialog(
+    onNo: () -> Unit = {},
+    onYes: () -> Unit = {}
+) {
+    AlertDialog(
+        onDismissRequest = {},
+        buttons = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Deseja excluir os dados de\nrecorde para esse nível?",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        color = Color.DarkGray,
+                        fontSize = 20.sp
+                    ),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(15.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(35.dp)
+                            .background(Color.LightGray, shape = RoundedCornerShape(100))
+                            .clickable { onNo() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Não",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 14.sp),
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(35.dp)
+                            .background(Color.LightGray, shape = RoundedCornerShape(100))
+                            .clickable { onYes() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Sim",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 14.sp),
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

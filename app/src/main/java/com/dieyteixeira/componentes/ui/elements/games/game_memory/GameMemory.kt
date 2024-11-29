@@ -1,6 +1,7 @@
 package com.dieyteixeira.componentes.ui.elements.games.game_memory
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -36,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieyteixeira.componentes.ui.elements.components.FlipCard
 import com.dieyteixeira.componentes.ui.theme.BlueSky
+import com.dieyteixeira.componentes.ui.theme.Green
 import com.dieyteixeira.componentes.ui.theme.Green500
+import com.dieyteixeira.componentes.ui.theme.Green800
 import com.dieyteixeira.componentes.ui.theme.Red
 import com.dieyteixeira.componentes.ui.theme.Yellow
 import kotlinx.coroutines.delay
@@ -70,7 +74,7 @@ fun GameMemory(color: Color) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -111,6 +115,7 @@ fun MemoryGame(
     var isWaitingForFlip by remember { mutableStateOf(false) }
     var showEndOneGameDialog by remember { mutableStateOf(false) }
     var showEndTwoGameDialog by remember { mutableStateOf(false) }
+    var showClearRecordDialog by remember { mutableStateOf(false) }
 
     var winnerName by remember { mutableStateOf("") }
     var winnerScore by remember { mutableStateOf(0) }
@@ -147,6 +152,9 @@ fun MemoryGame(
             winnerName = winnerName,
             gridSize = gridSizeAtual,
             onDismiss = {
+                showEndOneGameDialog = false
+            },
+            onNewGame = {
                 showEndOneGameDialog = false
                 onNewGame()
             },
@@ -196,7 +204,6 @@ fun MemoryGame(
                 gridSizeAtual = nextGridSize
                 levelAtual = level
 
-                showEndOneGameDialog = false
                 Log.d("GameState", "GridSize atualizada para: $gridSizeAtual")
             }
         )
@@ -233,6 +240,18 @@ fun MemoryGame(
                     columns = config.gridSize.columns,
                     matchedPairs = mutableMapOf()
                 )
+            }
+        )
+    }
+
+    if (showClearRecordDialog) {
+        ShowClearRecordDialog(
+            onNo = { showClearRecordDialog = false },
+            onYes = {
+                showClearRecordDialog = false
+
+                clearOnePlayerRecord(context, "${gridSizeAtual.rows}x${gridSizeAtual.columns}", "Memoria")
+                Toast.makeText(context, "Recorde zerado!", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -331,6 +350,14 @@ fun MemoryGame(
                 winnerName = gameState.player1Name
                 gridSize = gridSizeAtual
 
+                saveOnePlayerRecord(
+                    context,
+                    gameState.player1Name,
+                    gameState.movesPlayer,
+                    "${gridSizeAtual.rows}x${gridSizeAtual.columns}",
+                    "Memoria"
+                )
+
                 showEndOneGameDialog = true
             }
         }
@@ -338,6 +365,7 @@ fun MemoryGame(
 
     val player1Victories = getTwoPlayersVictories(context, player1Name, player2Name, "Memoria")
     val player2Victories = getTwoPlayersVictories(context, player2Name, player1Name, "Memoria")
+    val player1Record = getOnePlayerRecord(context, "${gridSizeAtual.rows}x${gridSizeAtual.columns}", "Memoria")
 
     // Desenho do tabuleiro
     Column(
@@ -490,73 +518,194 @@ fun MemoryGame(
                 }
             }
         } else {
-            Column (
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center
+                Column(
+                    modifier = Modifier
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {}
+                Spacer(modifier = Modifier.width(5.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .height(30.dp)
-                            .background(
-                                color = Green500,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Nível: $levelAtual",
-                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
-                            color = Color.White
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(15.dp))
-                    Row(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .height(30.dp)
-                            .background(
-                                color = Green500,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Grid: ${gridSizeAtual.rows} x ${gridSizeAtual.columns}",
-                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
-                            color = Color.White
-                        )
-                    }
+                    Text(
+                        text = "Recorde",
+                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 10.sp),
+                        color = Color.DarkGray
+                    )
                 }
-                Spacer(modifier = Modifier.height(5.dp))
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .background(
+                            color = Green800,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Nível",
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
+                        color = Color.White,
+                        modifier = Modifier
+                            .height(20.dp)
+                            .padding(3.dp)
+                    )
+                    Text(
+                        text = "$levelAtual",
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp),
+                        color = Color.White,
+                        modifier = Modifier.height(40.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .background(
+                            color = Green800,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Grid",
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
+                        color = Color.White,
+                        modifier = Modifier
+                            .height(20.dp)
+                            .padding(3.dp)
+                    )
+                    Text(
+                        text = "${gridSizeAtual.rows}x${gridSizeAtual.columns}",
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp),
+                        color = Color.White,
+                        modifier = Modifier.height(40.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+                Row(
+                    modifier = Modifier
+                        .weight(2f)
+                        .height(60.dp)
+                        .background(
+                            color = Green500,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .clickable{ showClearRecordDialog = true },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(
+                        modifier = Modifier
+                            .weight(3f)
+                            .height(60.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Movim.",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
+                            color = Color.White,
+                            modifier = Modifier
+                                .height(20.dp)
+                                .padding(3.dp)
+                        )
+                        Text(
+                            text = "${player1Record.first}",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp),
+                            color = Color.White,
+                            modifier = Modifier.height(40.dp)
+                        )
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(4f)
+                            .height(60.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Jogador",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 12.sp),
+                            color = Color.White,
+                            modifier = Modifier
+                                .height(20.dp)
+                                .padding(3.dp)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .padding(top = 4.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            Text(
+                                text = "${player1Record.second}",
+                                style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
+                                color = Color.White
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Movimentos: ${gameState.movesPlayer}",
-                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 18.sp),
-                    color = Color.Black
+                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 20.sp),
+                    color = Color.DarkGray
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         val cardSize = calculateCardSize(gameState.rows, gameState.columns)
 
-        GridBoard(gameState, cardSize) { index ->
-            if (!gameState.revealed[index] && !gameState.matched[index] && !isWaitingForFlip) {
-                val newRevealed = gameState.revealed.toMutableList()
-                newRevealed[index] = true
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            GridBoard(gameState, cardSize) { index ->
+                if (!gameState.revealed[index] && !gameState.matched[index] && !isWaitingForFlip) {
+                    val newRevealed = gameState.revealed.toMutableList()
+                    newRevealed[index] = true
 
-                if (gameState.firstChoice == null) {
-                    gameState = gameState.copy(firstChoice = index, revealed = newRevealed)
-                } else {
-                    gameState = gameState.copy(secondChoice = index, revealed = newRevealed)
+                    if (gameState.firstChoice == null) {
+                        gameState = gameState.copy(firstChoice = index, revealed = newRevealed)
+                    } else {
+                        gameState = gameState.copy(secondChoice = index, revealed = newRevealed)
+                    }
                 }
             }
         }
